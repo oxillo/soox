@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+    xmlns:xh="xspec-helpers"
+    xmlns:map="http://www.w3.org/2005/xpath-functions/map"
+    xmlns:soox="simple-open-office-xml"
+    xmlns:ct="http://schemas.openxmlformats.org/package/2006/content-types"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    xmlns:my="my"
+    
+    xslt-version="3.0"
+    run-as="external"
+    stylesheet="../src/spreadsheet-helpers.xsl">
+    <x:variable name="x:saxon-config" href="../src/saxon.config"/>
+    
+    <x:helper stylesheet="helpers/helpers.xsl" />
+    
+    
+    <x:scenario label="Testing spreadsheet helpers">
+        
+        <x:scenario label="to convert cell address to A1 format">
+            <x:scenario label="for 2nd column and 1st row 'soox:encode-cell-address(2,1)">
+                <x:call function="soox:encode-cell-address">
+                    <x:param select="2"/>
+                    <x:param select="1"/>
+                </x:call>
+                <x:expect label="should return 'B1'" select="'B1'"/>
+            </x:scenario>
+            
+            <x:scenario label="for 27th column and 6th row 'soox:encode-cell-address(27,6)">
+                <x:call function="soox:encode-cell-address">
+                    <x:param select="27"/>
+                    <x:param select="6"/>
+                </x:call>
+                <x:expect label="should return 'AA6'" select="'AA6'"/>
+            </x:scenario>
+            
+            <x:scenario label="for 53th column and 128th row as a sequence 'soox:encode-cell-address((53,128))">
+                <x:call function="soox:encode-cell-address">
+                    <x:param select="(53,128)"/>
+                </x:call>
+                <x:expect label="should return 'BA128'" select="'BA128'"/>
+            </x:scenario>
+            
+            <x:scenario label="for a 3 (or more) integers sequence (700,500,300,100) 'soox:encode-cell-address((700,500,300,100))">
+                <x:call function="soox:encode-cell-address">
+                    <x:param select="(700,500,300,100)"/>
+                </x:call>
+                <x:expect label="should return 'ZX500'" select="'ZX500'"/>
+            </x:scenario>
+            
+            <x:scenario label="for an erroneous 1 integer sequence 'soox:encode-cell-address((700))">
+                <x:call function="soox:encode-cell-address">
+                    <x:param select="(700)"/>
+                </x:call>
+                <x:expect label="should return ''" select="''"/>
+            </x:scenario>
+            
+            <x:scenario label="for an erroneous empty sequence 'soox:encode-cell-address(())" catch="true">
+                <x:call function="soox:encode-cell-address">
+                    <x:param select="()"/>
+                </x:call>
+                <x:expect label="should generate an error" select="QName('http://www.w3.org/2005/xqt-errors', 'XPTY0004')" test="$x:result?err?code"/>
+            </x:scenario>
+            
+            <!--x:scenario label="When xlwfn:convertColumnNumberToLetters() is called for column 703">
+                <x:call function="xlwfn:convertColumnNumberToLetters">
+                    <x:param select="703"/>
+                </x:call>
+                <x:expect label="it should return 'AAA'" select="'AAA'"/>
+            </x:scenario>
+            
+            <x:scenario label="When xlwfn:convertColumnNumberToLetters() is called for column 1000(=(1x26x26)+(12x26)+12)">
+                <x:call function="xlwfn:convertColumnNumberToLetters">
+                    <x:param select="1000"/>
+                </x:call>
+                <x:expect label="it should return 'ALL'" select="'ALL'"/>
+            </x:scenario-->    
+        </x:scenario>
+        
+        <x:scenario label="to convert cell address from A1 format">
+            <x:scenario label="for valid string 'soox:decode-cell-address('ALL100')">
+                <x:call function="soox:decode-cell-address">
+                    <x:param select="'ALL100'"/>
+                </x:call>
+                <x:expect label="should return a sequence of 2 integers (1000,100)" select="(1000,100)"/>
+            </x:scenario>
+            <x:scenario label="for valid string 'soox:decode-cell-address('zx81')">
+                <x:call function="soox:decode-cell-address">
+                    <x:param select="'zx81'"/>
+                </x:call>
+                <x:expect label="should return a sequence of 2 integers (700,81)" select="(700,81)"/>
+            </x:scenario>
+            <x:scenario label="for invalid string 'soox:decode-cell-address('2Nd')">
+                <x:call function="soox:decode-cell-address">
+                    <x:param select="'2Nd'"/>
+                </x:call>
+                <x:expect label="should return a empty sequence" select="()"/>
+            </x:scenario>
+            <x:scenario label="for invalid string 'soox:decode-cell-address('AA0')">
+                <x:call function="soox:decode-cell-address">
+                    <x:param select="'AA0'"/>
+                </x:call>
+                <x:expect label="should return a empty sequence" select="()"/>
+            </x:scenario>
+            <x:scenario label="for invalid string 'soox:decode-cell-address('A-5')">
+                <x:call function="soox:decode-cell-address">
+                    <x:param select="'A-5'"/>
+                </x:call>
+                <x:expect label="should return a empty sequence" select="()"/>
+            </x:scenario>
+            <x:scenario label="for invalid string 'soox:decode-cell-address('BEE$5')">
+                <x:call function="soox:decode-cell-address">
+                    <x:param select="'BEE$5'"/>
+                </x:call>
+                <x:expect label="should return a empty sequence" select="()"/>
+            </x:scenario>
+        </x:scenario>
+    </x:scenario>
+</x:description>

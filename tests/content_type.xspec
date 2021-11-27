@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec" 
+    xmlns:file="http://expath.org/ns/file"
+    xmlns:arch="http://expath.org/ns/archive"
+    xmlns:map="http://www.w3.org/2005/xpath-functions/map"
+    xmlns:xlwfn="xlwriter-functions"
+    xmlns:xlwfile="xlwriter-files"
+    xmlns:ct="http://schemas.openxmlformats.org/package/2006/content-types"
+    
+    xslt-version="3.0"
+    run-as="external"
+    stylesheet="../src/content_type.xsl">
+    <x:variable name="x:saxon-config" href="../src/saxon.config"/>
+    
+    <x:scenario label="Scenario for testing xlwriter utility functions">
+        
+        <x:scenario label="When xlwfn:default() is called,">
+            <x:call function="xlwfile:content_type">
+                <x:param select="4"/> <!-- nbsheets -->
+            </x:call>
+            
+            
+            <x:expect label="it should return a 'Types' element">
+                <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">...</Types>
+            </x:expect>
+            
+            <x:expect label="that contains a 'Default' element for 'rels' extension"
+                test="ct:Types/ct:Default[@Extension='rels']">
+                <Default xmlns="http://schemas.openxmlformats.org/package/2006/content-types" Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+            </x:expect>
+            <x:expect label="that contains a 'Default' element for 'xml' extension"
+                test="ct:Types/ct:Default[@Extension='xml']">
+                <Default xmlns="http://schemas.openxmlformats.org/package/2006/content-types" Extension="xml" ContentType="application/xml"/>
+            </x:expect>
+            
+            <x:expect label="that overides the content type for 'workbook.xml'"
+                test="ct:Types/ct:Override[@PartName='/xl/workbook.xml']">
+                <Override xmlns="http://schemas.openxmlformats.org/package/2006/content-types" 
+                    PartName="/xl/workbook.xml"
+                    ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+            </x:expect>
+            
+            <!-- Document properties -->
+            <x:expect label="that overides the content type for core properties 'core.xml'"
+                test="ct:Types/ct:Override[@PartName='/docProps/core.xml']">
+                <Override xmlns="http://schemas.openxmlformats.org/package/2006/content-types" 
+                    PartName="/docProps/core.xml"
+                    ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+            </x:expect>
+            <x:expect label="that overides the content type for application properties 'app.xml'"
+                test="ct:Types/ct:Override[@PartName='/docProps/app.xml']">
+                <Override xmlns="http://schemas.openxmlformats.org/package/2006/content-types" 
+                    PartName="/docProps/app.xml"
+                    ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
+            </x:expect>
+            
+            <!-- Workbook & worksheets properties -->
+            <x:expect label="that overides the content type for 'theme1.xml'"
+                test="ct:Types/ct:Override[@PartName='/xl/theme/theme1.xml']">
+                <Override xmlns="http://schemas.openxmlformats.org/package/2006/content-types" 
+                    PartName="/xl/theme/theme1.xml"
+                    ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>
+            </x:expect>
+            <x:expect label="that overides the content type for 'styles.xml'"
+                test="ct:Types/ct:Override[@PartName='/xl/styles.xml']">
+                <Override xmlns="http://schemas.openxmlformats.org/package/2006/content-types" 
+                    PartName="/xl/styles.xml"
+                    ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+            </x:expect>
+            
+            <x:expect label="that overides the content type for 'workbook.xml'"
+                test="ct:Types/ct:Override[@PartName='/xl/workbook.xml']">
+                <Override xmlns="http://schemas.openxmlformats.org/package/2006/content-types" 
+                    PartName="/xl/workbook.xml"
+                    ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+            </x:expect>
+            <x:expect label="that overides the content type for worksheet 'sheet1.xml'"
+                test="ct:Types/ct:Override[@PartName='/xl/worksheets/sheet1.xml']">
+                <Override xmlns="http://schemas.openxmlformats.org/package/2006/content-types" 
+                    PartName="/xl/worksheets/sheet1.xml"
+                    ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+            </x:expect>
+            <x:expect label="that overides the content type for worksheet 'sheet2.xml'"
+                test="ct:Types/ct:Override[@PartName='/xl/worksheets/sheet2.xml']">
+                <Override xmlns="http://schemas.openxmlformats.org/package/2006/content-types" 
+                    PartName="/xl/worksheets/sheet2.xml"
+                    ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+            </x:expect>
+            <x:expect label="that overrides the content type for all worsheets 'worksheet?.xml'"
+                test="ct:Types/ct:Override[contains(@PartName,'/xl/worksheets/sheet')]=>count()"
+                select="4"/>
+        </x:scenario>
+    </x:scenario>
+</x:description>

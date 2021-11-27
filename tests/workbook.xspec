@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec" 
+    xmlns:file="http://expath.org/ns/file"
+    xmlns:arch="http://expath.org/ns/archive"
+    xmlns:bin="http://expath.org/ns/binary"
+    xmlns:map="http://www.w3.org/2005/xpath-functions/map"
+    xmlns:xlwfn="xlwriter-functions"
+    xmlns:xlwfile="xlwriter-files"
+    xmlns:ct="http://schemas.openxmlformats.org/package/2006/content-types"
+    xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    xmlns:my="my"
+    
+    xslt-version="3.0"
+    run-as="external"
+    stylesheet="../src/workbook.xsl">
+    <x:variable name="x:saxon-config" href="../src/saxon.config"/>
+    
+    <x:scenario pending="yes" label="Given an XML workbbok">
+        <x:variable name="my:workbook">
+            <workbook>
+                <worksheet name="Feuil1"/>
+                <worksheet name="Feuil2"/>
+                <worksheet name="Feuil3"/>
+            </workbook>
+        </x:variable>
+        
+        <x:scenario label="when xlwfile:spreadsheet_part is called on it,">
+            <x:call function="xlwfile:spreadsheet_part">
+                <x:param select="$my:workbook"/>
+            </x:call>
+            
+            
+            <x:expect label="should have a workbook.xml file"
+                test="map:keys($x:result)='xl/workbook.xml'"/>
+            
+            <x:expect label="should have a relationship  file"
+                test="map:keys($x:result)='xl/_rels/workbook.xml.rels'"/>
+            
+            
+        </x:scenario>
+    </x:scenario>
+    
+    <x:scenario label="Given workbbok files">
+        <x:variable name="my:workbook-files" select="map{
+            'xl/sharedStrings.xml' : map{
+                'content' : 'N/A',
+                'types' : map{
+                    'content':'sharedStrings',
+                    'relationship':'sharedStrings.rels'
+                }
+            },
+            'xl/styles.xml' : map{
+                'content' : 'N/A',
+                'types' : map{
+                    'content':'styles',
+                    'relationship':'styles.rels'
+                }
+            },
+            'xl/worksheets/sheet1.xml' : map{
+                'content' : 'N/A',
+                'types' : map{
+                    'content':'sheet',
+                    'relationship':'sheet.rels'
+                }
+            }, 
+            'xl/worksheets/sheet2.xml' : map{
+                'content' : 'N/A',
+                'types' : map{
+                    'content':'sheet',
+                    'relationship':'sheet.rels'
+                }
+            },
+            'xl/worksheets/sheet3.xml' : map{
+                'content' : 'N/A',
+                'types' : map{
+                    'content':'sheet',
+                    'relationship':'sheet.rels'
+                }
+            }
+            }"/>
+        
+        <x:scenario label="when workbook.xml.rels is called on it,">
+            <x:call function="xlwfile:workbook.xml.rels">
+                <x:param select="$my:workbook-files"/>
+            </x:call>
+            
+            <x:expect label="should have be a list of relationships" test="$x:result('content')/element()">
+                <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+                    <Relationship Id="rId1" Type="sharedStrings.rels" Target="sharedStrings.xml"/>
+                    <Relationship Id="rId2" Type="styles.rels" Target="styles.xml"/>
+                    <Relationship Id="rId3" Type="sheet.rels" Target="worksheets/sheet1.xml"/>
+                    <Relationship Id="rId4" Type="sheet.rels" Target="worksheets/sheet2.xml"/>
+                    <Relationship Id="rId5" Type="sheet.rels" Target="worksheets/sheet3.xml"/>
+                </Relationships>
+            </x:expect>
+                
+        </x:scenario>
+        
+        <x:scenario label="when workbook.xml is called on it,">
+            <x:variable name="my:relationships">
+                <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+                    <Relationship Id="rId3" Type="sharedStrings.rels" Target="sharedStrings.xml"/>
+                    <Relationship Id="rId2" Type="styles.rels" Target="styles.xml"/>
+                    <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+                    <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
+                    <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>
+                </Relationships>
+            </x:variable>
+            <x:call function="xlwfile:workbook.xml">
+                <x:param>
+                    <workbook>
+                        <worksheet name="Feuil1"/>
+                        <worksheet name="Feuil2"/>
+                        <worksheet name="Feuil3"/>
+                    </workbook>
+                </x:param>
+                <x:param select="map{'content' : $my:relationships}"/>
+            </x:call>
+            
+            <x:expect label="should have a workbook.xml file"
+                test="$x:result('content')/sml:workbook/sml:sheets">
+                <sheets xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+                    xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+                    <sheet name="Feuil1" sheetId="1" state="visible" r:id="rId1"/>
+                    <sheet name="Feuil2" sheetId="2" state="visible" r:id="rId4"/>
+                    <sheet name="Feuil3" sheetId="3" state="visible" r:id="rId5"/>
+                </sheets>
+            </x:expect>
+            
+        </x:scenario>
+    </x:scenario>
+</x:description>

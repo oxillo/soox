@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+    xmlns:xh="xspec-helpers"
+    xmlns:map="http://www.w3.org/2005/xpath-functions/map"
+    xmlns:xlwfn="xlwriter-functions"
+    xmlns:xlwfile="xlwriter-files"
+    xmlns:ct="http://schemas.openxmlformats.org/package/2006/content-types"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    xmlns:my="my"
+    
+    xslt-version="3.0"
+    run-as="external"
+    stylesheet="../src/worksheet.xsl">
+    <x:variable name="x:saxon-config" href="../src/saxon.config"/>
+    
+    <x:helper stylesheet="helpers/helpers.xsl" />
+    
+    
+    <x:scenario label="Given an XML worksheet">
+        <x:variable name="my:worksheet" href="data/worksheet.xml"/>
+        
+        <x:scenario label="when templates are applied on it,">
+            <x:context select="$my:worksheet/element()" mode="worksheet" >
+                <x:param name="shared-strings" select="('nombre','chaine','toto','flottant','date')" tunnel="yes"/>
+            </x:context>
+            
+            <x:expect label="the computed range &lt;dimension&gt; should be as expected" href="data/expected_sheet1.xml"
+                select="/sml:worksheet/sml:dimension" test="/sml:worksheet/sml:dimension"/>
+            
+            <!--x:expect label="the &lt;worksheet&gt; element should be as expected" href="data/expected_sheet1.xml"
+                select="xh:remove-whitespacesonly-nodes(.)/sml:worksheet" test="/sml:worksheet"/-->
+            
+            <x:expect label="the data &lt;sheetData&gt; should be as expected" href="data/expected_sheet1.xml"
+                select="xh:remove-whitespacesonly-nodes(.)/sml:worksheet/sml:sheetData" test="/sml:worksheet/sml:sheetData"/>
+            
+            <x:expect label="the first &lt;row&gt; should be as expected" href="data/expected_sheet1.xml"
+                select="xh:remove-whitespacesonly-nodes(.)/sml:worksheet/sml:sheetData/sml:row[1]" test="/sml:worksheet/sml:sheetData/sml:row[1]"/>
+            
+            <x:expect label="all &lt;row&gt; (but dates row 4) should be as expected" href="data/expected_sheet1.xml"
+                select="xh:remove-whitespacesonly-nodes(.)/sml:worksheet/sml:sheetData/sml:row" test="/sml:worksheet/sml:sheetData/sml:row"/>
+        </x:scenario>
+        
+        <x:scenario label="when xlwfile:worksheet.xml() is called on it," catch="yes">
+            <x:call function="xlwfile:worksheet.xml">
+                <x:param select="$my:worksheet"/>
+            </x:call>
+            
+            
+            <x:expect label="it should return a map with 'content' and 'types' keys"
+                test="map:keys($x:result)=('content','types')"/>
+            
+            <!-- Check the types returned -->
+            <x:variable name="types" select="$x:result('types')"/>
+            <x:expect label="the 'types' key should be a map with 'content' and 'relationship' keys"
+                test="map:keys($types)=('content','relationship')"/>
+            
+            <x:expect label="the 'types/content' key should be 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml'"
+                test="$types('content')='application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml'"/>
+            
+            <x:expect label="the 'types/relationship' key should be 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet'"
+                test="$types('relationship')='http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet'"/>
+            
+            <!-- Check content -->
+            
+            <x:variable name="content" select="$x:result('content')/element()"/>
+            <x:expect label="the encoded content should be a &lt;worksheet&gt; element"
+                test="namespace-uri($content)||'#'||local-name($content) eq 'http://schemas.openxmlformats.org/spreadsheetml/2006/main#worksheet'"/> 
+            
+            <x:expect label="the encoded content should be a &lt;worksheet&gt; element"
+                test="$content/sml:dimension">
+                <dimension xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ref="A1:B4"/>
+            </x:expect>
+            
+               
+                <!--test="$content instance of element(worksheet)"-->
+            <!--as="element(sml:worksheet)"-->
+            
+            
+            
+        </x:scenario>
+    </x:scenario>
+</x:description>
