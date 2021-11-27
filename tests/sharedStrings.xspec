@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+    xmlns:xh="xspec-helpers"
+    xmlns:file="http://expath.org/ns/file"
+    xmlns:arch="http://expath.org/ns/archive"
+    xmlns:bin="http://expath.org/ns/binary"
+    xmlns:map="http://www.w3.org/2005/xpath-functions/map"
+    xmlns:xlwfn="xlwriter-functions"
+    xmlns:xlwfile="xlwriter-files"
+    xmlns:ct="http://schemas.openxmlformats.org/package/2006/content-types"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    xmlns:my="my"
+    
+    xslt-version="3.0"
+    run-as="external"
+    stylesheet="../src/workbook.xsl">
+    <x:variable name="x:saxon-config" href="../src/saxon.config"/>
+    
+    <x:helper stylesheet="helpers/helpers.xsl" />
+    
+    
+    <x:scenario label="Given an XML workbook">
+        <x:variable name="my:workbook" href="data/example-simpleworkbook.xml"/>
+        
+        <x:scenario label="when xlwfile:sharedStrings.xml() is called on it," catch="yes">
+            <x:call function="xlwfile:sharedStrings.xml">
+                <x:param select="$my:workbook"/>
+            </x:call>
+            
+            <x:expect label="it should return a map with 'content' and 'types' keys"
+                test="map:keys($x:result)=('content','types')"/>
+            
+            <!-- Check the types returned -->
+            <x:variable name="types" select="$x:result('types')"/>
+            <x:expect label="the 'types' key should be a map with 'content' and 'relationship' keys"
+                test="map:keys($types)=('content','relationship')"/>
+            
+            <x:expect label="the 'types/content' key should be 'application/vnd.openxmlformats-officedocument.sharedStrings.worksheet+xml'"
+                test="$types('content')='application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml'"/>
+            
+            <x:expect label="the 'types/relationship' key should be 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings'"
+                test="$types('relationship')='http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings'"/>
+            
+            <!-- Check content -->
+            <x:variable name="content" select="($x:result('content') => bin:decode-string() => parse-xml())/element()"/>
+            <x:expect label="the encoded content should be a &lt;sst&gt; element" test="$content">
+                <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="9" uniqueCount="8">
+                    <si>
+                        <t xml:space="preserve">nombre</t>
+                    </si>
+                    <si>
+                        <t xml:space="preserve">chaine</t>
+                    </si>
+                    <si>
+                        <t xml:space="preserve">toto</t>
+                    </si>
+                    <si>
+                        <t xml:space="preserve">flottant</t>
+                    </si>
+                    <si>
+                        <t xml:space="preserve">date</t>
+                    </si>
+                    <si>
+                        <t xml:space="preserve">number</t>
+                    </si>
+                    <si>
+                        <t xml:space="preserve">string</t>
+                    </si>
+                    <si>
+                        <t xml:space="preserve">float</t>
+                    </si>
+                </sst>
+                
+            </x:expect>
+            
+            
+            
+        </x:scenario>
+    </x:scenario>
+</x:description>

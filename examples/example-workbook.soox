@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workbook xmlns="soox">
+    <worksheet name="Feuil1">
+        <data>
+            <cell col="1" row="1">
+                <v>nombre</v>
+            </cell> 
+            <cell col="2" row="1">
+                <v>2</v>
+            </cell>
+            <cell col="1" row="2">
+                <v>chaine</v>
+            </cell>
+            <cell col="2" row="2">
+                <v>toto</v>
+            </cell>
+            <cell col="1" row="3">
+                <v>flottant</v>
+            </cell>
+            <cell col="2" row="3">
+                <v>2.53</v>
+            </cell>
+            <cell col="1" row="4">
+                <v>date</v>
+            </cell>
+            <cell col="2" row="4">
+                <v>1867-11-07</v>
+            </cell>
+            <cell col="1" row="5">
+                <v>formula</v>
+            </cell>
+            <cell col="2" row="5">
+                <f>B1*B3</f>
+                <v></v>
+            </cell>
+        </data>
+    </worksheet>
+    <worksheet name="Feuil1 in english">
+        <data>
+            <cell col="1" row="1">
+                <v>number</v>
+            </cell> 
+            <cell col="2" row="1">
+                <v>1</v>
+            </cell>
+            <cell col="1" row="2">
+                <v>string</v>
+            </cell>
+            <cell col="2" row="2">
+                <v>toto</v>
+            </cell>
+            <cell col="1" row="3">
+                <v>float</v>
+            </cell>
+            <cell col="2" row="3">
+                <v>2.53</v>
+            </cell>
+        </data>
+    </worksheet>
+</workbook>
+

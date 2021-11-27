@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec" 
+    xmlns:file="http://expath.org/ns/file"
+    xmlns:arch="http://expath.org/ns/archive"
+    xmlns:map="http://www.w3.org/2005/xpath-functions/map"
+    xmlns:xlwfn="xlwriter-functions"
+    xslt-version="3.0"
+    run-as="external"
+    stylesheet="../src/utils.xsl">
+    <x:variable name="x:saxon-config" href="../src/saxon.config"/>
+    
+    <x:scenario label="Scenario for testing xlwriter utility functions">
+        
+        <x:scenario label="When xlwfn:default() is called,">
+            <x:call function="xlwfn:default">
+                <x:param select="'extension'"/>
+                <x:param select="'content-type'"/>
+            </x:call>
+            <x:expect label="it should return a 'Default' element with @Extension and @ContentType specified as arguments">
+                <Default xmlns="http://schemas.openxmlformats.org/package/2006/content-types"
+                    Extension="extension" ContentType="content-type"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="Scenario for testing xlwriter utility functions xlwfn:override">
+            <x:call function="xlwfn:override">
+                <x:param select="'part'"/>
+                <x:param select="'content-type'"/>
+            </x:call>
+            <x:expect label="it should return a 'Override' element with @PartName and @ContentType specified as arguments">
+                <Override xmlns="http://schemas.openxmlformats.org/package/2006/content-types"
+                    PartName="part" ContentType="content-type"/>
+            </x:expect>
+        </x:scenario>
+    </x:scenario>
+</x:description>

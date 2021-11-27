@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec" 
+    xmlns:file="http://expath.org/ns/file"
+    xmlns:arch="http://expath.org/ns/archive"
+    xmlns:map="http://www.w3.org/2005/xpath-functions/map"
+    xmlns:xlwfn="xlwriter-functions"
+    xmlns:xlwfile="xlwriter-files"
+    xmlns:ct="http://schemas.openxmlformats.org/package/2006/content-types"
+    xmlns:my="my"
+    
+    xslt-version="3.0"
+    run-as="external"
+    stylesheet="../src/xlsx.xsl">
+    <x:variable name="x:saxon-config" href="../src/saxon.config"/>
+    
+    <x:scenario label="When creating a spreadsheet">
+        <x:variable name="my:workbook">
+            <workbook>
+                <worksheet name="Feuil1">
+                    <data>
+                        <cell col="1" row="1">
+                            <v>Value A1</v>
+                        </cell> 
+                        <cell col="2" row="3">
+                            <v>Value B3</v>
+                        </cell>
+                    </data>
+                </worksheet>
+                <worksheet name="Feuil2"/>
+                <worksheet name="Feuil3"/>
+            </workbook>
+        </x:variable>
+        
+        <x:scenario label="the produced file shall conform to OPC">
+            <x:call function="xlwfn:write">
+                <x:param select="resolve-uri('test.zip')"/> <!-- uri -->
+                <x:param select="$my:workbook"/>
+            </x:call>
+            
+            
+            
+            <x:expect label="should have a [Content_Types].xml file"
+                test="map:keys(arch:entries-map(file:read-binary(resolve-uri('test.xlsx'))))='[Content_Types].xml'"/>
+            <x:expect label="should have a relationship part"
+                test="map:keys(arch:entries-map(file:read-binary(resolve-uri('test.xlsx'))))='_rels/.rels'"/>
+            <x:expect label="should have a spreadsheet part"
+                test="map:keys(arch:entries-map(file:read-binary(resolve-uri('test.xlsx'))))='xl/workbook.xml'"/>
+            
+            
+            
+        </x:scenario>
+    </x:scenario>
+</x:description>

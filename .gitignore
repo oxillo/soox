@@ -1,0 +1,3 @@
+# ignore xspec results
+/tests/*report.html
+/tests/*result.html
