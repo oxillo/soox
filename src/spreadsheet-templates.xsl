@@ -4,7 +4,7 @@
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
   xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
-  xmlns:soox="simple-open-office-xml"
+  xmlns:soox="simplify-office-open-xml"
   xmlns:s="soox"
   exclude-result-prefixes="#all" extension-element-prefixes="soox">
   
@@ -31,7 +31,7 @@
   <!--=======================================================================================================-->
   <!--==                                                                                                   ==-->
   
-  <xsl:mode name="soox:toOpenOffice" visibility="public"/>
+  <xsl:mode name="soox:toOfficeOpenXml" visibility="public"/>
   <xsl:variable name="ns-sml" select="'http://schemas.openxmlformats.org/spreadsheetml/2006/main'" static="true"/>
   
   <xd:doc>
@@ -39,7 +39,7 @@
       <xd:p></xd:p>
     </xd:desc>
   </xd:doc>
-  <xsl:template match="s:worksheet" mode="soox:toOpenOffice">
+  <xsl:template match="s:worksheet" mode="soox:toOfficeOpenXml">
     <xsl:element name="worksheet" _namespace="{$ns-sml}">
       
       <!--sheetPr xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" filterMode="false">
@@ -84,7 +84,7 @@
     </xsl:element>
   </xsl:template>
   
-  <xsl:template match="s:data"  mode="soox:toOpenOffice">
+  <xsl:template match="s:data"  mode="soox:toOfficeOpenXml">
     
     <!--cols xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
       <col min="1" max="1" width="20.69921875" customWidth="1"/>
@@ -108,7 +108,7 @@
     </xsl:element>
   </xsl:template>
   
-  <xsl:template match="s:cell"  mode="soox:toOpenOffice">
+  <xsl:template match="s:cell"  mode="soox:toOfficeOpenXml">
     <xsl:param name="shared-strings" as="xs:string*" tunnel="yes"/>
     
     <xsl:variable name="option-date-as-number" select="true()"/>
@@ -166,7 +166,7 @@
     </xsl:element>
   </xsl:template>
   
-  <xsl:template match="s:v"  mode="soox:toOpenOffice" xml:space="default">
+  <xsl:template match="s:v"  mode="soox:toOfficeOpenXml" xml:space="default">
     <xsl:param name="shared-strings" as="xs:string*" tunnel="yes"/>
     
     <xsl:variable name="option-date-as-number" select="true()"/>
@@ -217,12 +217,12 @@
     </xsl:element>  
   </xsl:template>
   
-  <xsl:template match="s:f"  mode="soox:toOpenOffice" xml:space="default">
+  <xsl:template match="s:f"  mode="soox:toOfficeOpenXml" xml:space="default">
     <xsl:element name="f" _namespace="{$ns-sml}">
     </xsl:element>
   </xsl:template>
   
-  <xsl:template match="text()" mode="soox:toOpenOffice"/>
+  <xsl:template match="text()" mode="soox:toOfficeOpenXml"/>
   
   
   
@@ -230,35 +230,36 @@
   <!--== Conversion templates to Open Office                                                               ==-->
   <!--=======================================================================================================-->
   <!--==                                                                                                   ==-->
-  <xsl:mode name="soox:fromOpenOffice" visibility="public"/>
+  <xsl:mode name="soox:fromOfficeOpenXml" visibility="public"/>
   <xsl:variable name="ns-soox" select="'soox'" visibility="private"/>
   
   
-  <xsl:template match="/" mode="soox:fromOpenOffice">
+  <xsl:template match="/" mode="soox:fromOfficeOpenXml">
     <xsl:apply-templates mode="#current"/>
   </xsl:template>
   
-  <xsl:template match="sml:workbook" mode="soox:fromOpenOffice">
+  <xsl:template match="sml:workbook" mode="soox:fromOfficeOpenXml">
     <xsl:element name="workbook" namespace="soox">
       <xsl:apply-templates mode="#current"/>
     </xsl:element>
   </xsl:template>
   
-  <xsl:template match="sml:sheet" mode="soox:fromOpenOffice">
+  <xsl:template match="sml:sheet" mode="soox:fromOfficeOpenXml">
     <xsl:param name="file-hierarchy" tunnel="yes"/>
     <xsl:param name="relationship" tunnel="yes"/>
+    <xsl:param name="base" tunnel="yes"/>
     
     <xsl:variable name="relation-id" select="@*:id" as="xs:string"/>
     <xsl:variable name="worksheet">
       <xsl:variable name="fname" select="$relationship//*[@Id = $relation-id]/@Target"/>
-      <xsl:sequence select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy( $fname )"/>
+      <xsl:sequence select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy( $base||$fname )"/>
     </xsl:variable>
-    <xsl:apply-templates select="$worksheet" mode="soox:fromOpenOffice">
+    <xsl:apply-templates select="$worksheet" mode="soox:fromOfficeOpenXml">
       <xsl:with-param name="sheet-attributes" select="map{'name':@name, 'state':@state}" tunnel="yes"/>
     </xsl:apply-templates>
   </xsl:template>
   
-  <xsl:template match="sml:worksheet" mode="soox:fromOpenOffice">
+  <xsl:template match="sml:worksheet" mode="soox:fromOfficeOpenXml">
     <xsl:param name="sheet-attributes" tunnel="yes"/>
     
     <xsl:element name="worksheet" namespace="soox">
@@ -267,17 +268,17 @@
     </xsl:element>
   </xsl:template>
   
-  <xsl:template match="sml:sheetData" mode="soox:fromOpenOffice">
+  <xsl:template match="sml:sheetData" mode="soox:fromOfficeOpenXml">
     <xsl:element name="data" namespace="soox">
       <xsl:apply-templates mode="#current"/>
     </xsl:element>
   </xsl:template>
   
-  <xsl:template match="sml:*" mode="soox:fromOpenOffice">
+  <xsl:template match="sml:*" mode="soox:fromOfficeOpenXml">
     <xsl:apply-templates mode="#current"/>
   </xsl:template>
   
-  <xsl:template match="sml:c" mode="soox:fromOpenOffice">
+  <xsl:template match="sml:c" mode="soox:fromOfficeOpenXml">
     <xsl:element name="cell" namespace="soox">
       <xsl:variable name="address" select="soox:decode-cell-address(@r)"/>
       <xsl:attribute name="col" select="$address[1]"/>
@@ -286,7 +287,7 @@
     </xsl:element>
   </xsl:template>
   
-  <xsl:template match="sml:v" mode="soox:fromOpenOffice">
+  <xsl:template match="sml:v" mode="soox:fromOfficeOpenXml">
     <xsl:param name="sharedstrings-list" tunnel="yes"/>
     
     <xsl:element name="v" namespace="soox">
@@ -305,7 +306,7 @@
       <xd:p>Copy formula as is in soox</xd:p>
     </xd:desc>
   </xd:doc>
-  <xsl:template match="sml:f" mode="soox:fromOpenOffice">
+  <xsl:template match="sml:f" mode="soox:fromOfficeOpenXml">
     <xsl:element name="f" namespace="soox">
       <xsl:value-of select="text()"/>
     </xsl:element>

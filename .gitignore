@@ -1,3 +1,13 @@
 # ignore xspec results
 /tests/*report.html
 /tests/*result.html
+/tests/xspec/
+
+# ignore local documentation
+/ECMA376
+
+# ignore local install of Saxon
+/SaxonHE*
+
+# ignore local test data
+/data

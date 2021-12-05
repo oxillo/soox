@@ -3,8 +3,8 @@
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
-  xmlns:soox="simple-open-office-xml"
-  xmlns:sooxns="simple-open-office-xml/namespaces"
+  xmlns:soox="simplify-office-open-xml"
+  xmlns:sooxns="simplify-office-open-xml/namespaces"
   exclude-result-prefixes="#all">
   
   <xd:doc scope="stylesheet">

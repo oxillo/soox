@@ -6,16 +6,13 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
-    xmlns:soox="simple-open-office-xml"
+    xmlns:soox="simplify-office-open-xml"
     xmlns:s="soox"
     xmlns:map="http://www.w3.org/2005/xpath-functions/map"
-    xmlns:arch="http://expath.org/ns/archive"
-    xmlns:file="http://expath.org/ns/file"
-    xmlns:bin="http://expath.org/ns/binary"
     xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
     xmlns:r="http://schemas.openxmlformats.org/package/2006/relationships"
     exclude-result-prefixes="#all"
-    extension-element-prefixes="soox arch file bin">
+    extension-element-prefixes="soox">
     
     <xd:doc scope="package">
         <xd:desc>
@@ -24,54 +21,79 @@
             <xd:p></xd:p>
         </xd:desc>
     </xd:doc>
-    
-    <!--xsl:use-package name="soox:common" version="1.0"/-->
-    <!--xsl:use-package name="soox:utils" version="1.0"/-->
-
 
     <xsl:include href="spreadsheet-styles.xsl"/>
     <xsl:include href="spreadsheet-templates.xsl"/>
     
     
     
-    
+    <xd:doc>
+        <xd:desc>
+            <xd:p>Decode the specified spreadsheet</xd:p>
+        </xd:desc>
+        <xd:param name="parts">the parts in the package</xd:param>
+        <xd:param name="partname">the name of the part to decode</xd:param>
+    </xd:doc>
     <xsl:function name="soox:decode-spreadsheet-part" visibility="public">
-        <xsl:param name="file-hierarchy"/>
+        <xsl:param name="parts"/>
+        <xsl:param name="partname"/>
         
-        <xsl:variable name="office-fname" select="$file-hierarchy('$root')('name')"/>
-        <xsl:variable name="relationship" select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy('_rels/'||$office-fname||'.rels')"/>
-        <xsl:variable name="workbook" select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy( $office-fname )"/>
-        <xsl:variable name="sharedstrings">
-            <xsl:variable name="fname" select="$relationship => soox:get-relationships-of-type('http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings')"/>
-            <xsl:sequence select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy( $fname[1]/@Target )"/>
+        <!-- Extract workbook file -->
+        <xsl:variable name="workbook" select="$parts => soox:extract-xmlfile-from-file-hierarchy( $partname )"/>
+        
+        <!-- Decompose partname into segments to extract the base and basename -->
+        <!-- /xl/workbook.xml will give base='/xl/' and basename='workbook.xml' --> 
+        <xsl:variable name="segments" select="tokenize($partname,'/')"/>
+        <xsl:variable name="base" select="string-join($segments[position() lt last()],'/')||'/'"/>
+        <xsl:variable name="basename" select="$segments[last()]"/>
+        
+        <!-- Extract relationship file for partname -->
+        <xsl:variable name="relationship" select="$parts => soox:extract-xmlfile-from-file-hierarchy($base||'_rels/'||$basename||'.rels')"/>
+        
+        <!-- Extract list of shared-strings -->
+        <xsl:variable name="sharedstrings-list" as="xs:string*">
+            <xsl:variable name="sharedstrings">
+                <xsl:variable name="fname" select="$relationship => soox:get-relationships-of-type('http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings')"/>
+                <xsl:sequence select="$parts => soox:extract-xmlfile-from-file-hierarchy($base||$fname[1]/@Target )"/>
+            </xsl:variable>
+            <xsl:sequence select="$sharedstrings//*:t/text()"/>
         </xsl:variable>
-        <xsl:variable name="sharedstrings-list" select="$sharedstrings//*:t/text()"/>
+        
+        <!-- Extract styles -->
         <xsl:variable name="styles">
             <xsl:variable name="fname" select="$relationship => soox:get-relationships-of-type('http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles')"/>
-            <xsl:sequence select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy( $fname[1]/@Target )"/>
+            <xsl:sequence select="$parts => soox:extract-xmlfile-from-file-hierarchy($base||$fname[1]/@Target )"/>
         </xsl:variable>
         
-        <xsl:apply-templates select="$workbook" mode="soox:fromOpenOffice">
-            <xsl:with-param name="file-hierarchy" select="$file-hierarchy" tunnel="yes"/>
+        <!-- Process workbook -->
+        <xsl:apply-templates select="$workbook" mode="soox:fromOfficeOpenXml">
+            <xsl:with-param name="file-hierarchy" select="$parts" tunnel="yes"/>
             <xsl:with-param name="sharedstrings-list" select="$sharedstrings-list" tunnel="yes"/>
             <xsl:with-param name="relationship" select="$relationship" tunnel="yes"/>
+            <xsl:with-param name="base" select="$base" tunnel="yes"/>
         </xsl:apply-templates>
     </xsl:function>
     
     
     
+    <xd:doc>
+        <xd:desc>
+            <xd:p>Encode a soox element as a spreadsheet</xd:p>
+        </xd:desc>
+        <xd:param name="elem">the element to encode</xd:param>
+        <xd:param name="base">the base path in the package where to store generated parts</xd:param>
+    </xd:doc>
     <xsl:function name="soox:encode-spreadsheet_part" visibility="public">
         <xsl:param name="elem"/>
+        <xsl:param name="base"/>
         
         <xsl:variable name="sharedStrings.xml" select="$elem => soox:sharedStrings.xml()"/>
         <xsl:variable name="worksheets" as="map(*)">
             <xsl:variable name="ws" as="map(*)*">
                 <xsl:variable name="wstype" select="'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet'"/>
                 <xsl:variable name="shared-strings" select="$sharedStrings.xml('content')//*:sst/*:si/*:t/text()"/>
-                <!--application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml-->
                 <xsl:for-each select="$elem/s:worksheet">
-                    <xsl:variable name="wsfilename" select="'xl/worksheets/sheet'||position()||'.xml'"/>
-                    <!--xsl:sequence select="current()=>xlwfile:worksheet.xml()=>xlwfn:pack-into($wsfilename, $wstype)"/-->
+                    <xsl:variable name="wsfilename" select="$base||'worksheets/sheet'||position()||'.xml'"/>
                     <xsl:sequence select="map:entry($wsfilename,current()=>soox:worksheet.xml($shared-strings))"/>
                 </xsl:for-each>
             </xsl:variable>
@@ -79,17 +101,29 @@
         </xsl:variable>
         <xsl:variable name="files" select="map:merge((
             $worksheets,
-            $elem => soox:styles.xml('xl/styles.xml'),
-            map:entry('xl/sharedStrings.xml', $sharedStrings.xml)))"/>
+            $elem => soox:styles.xml($base||'styles.xml'),
+            map:entry($base||'sharedStrings.xml', $sharedStrings.xml)))"/>
         <xsl:variable name="workbook.xml.rels" select="$files => soox:build-relationship-file('xl')"/>
         <xsl:variable name="workbook.xml" select="$elem => soox:workbook.xml( $workbook.xml.rels )"/>
         
         
-        <xsl:sequence select="map:merge(($files,map{'xl/workbook.xml':$workbook.xml, 'xl/_rels/workbook.xml.rels':$workbook.xml.rels}))"/>
+        <xsl:sequence select="map:merge(($files,map{$base||'workbook.xml':$workbook.xml, $base||'_rels/workbook.xml.rels':$workbook.xml.rels}))"/>
     </xsl:function>
     
     
-    <xsl:function name="soox:workbook.xml" visibility="public">
+    <xd:doc>
+        <xd:desc>
+            <xd:p>Encode a soox element as a spreadsheet and store parts under '/xl/' path</xd:p>
+        </xd:desc>
+        <xd:param name="elem">the element to encode</xd:param>
+    </xd:doc>
+    <xsl:function name="soox:encode-spreadsheet_part" visibility="public">
+        <xsl:param name="elem"/>
+        <xsl:sequence select="soox:encode-spreadsheet_part($elem,'/xl/')"/>
+    </xsl:function>
+    
+    
+    <xsl:function name="soox:workbook.xml" visibility="private">
         <xsl:param name="simple_workbook"/>
         <xsl:param name="relationship-file"/>
         
@@ -170,12 +204,12 @@
         </xd:desc>
         <xd:param name="simple_worksheet"></xd:param>
     </xd:doc>
-    <xsl:function name="soox:worksheet.xml" visibility="public">
+    <xsl:function name="soox:worksheet.xml" visibility="private">
         <xsl:param name="simple_worksheet"/>
         <xsl:param name="shared-strings" as="xs:string*"/>
         
         <xsl:variable name="content">
-            <xsl:apply-templates select="$simple_worksheet" mode="soox:toOpenOffice">
+            <xsl:apply-templates select="$simple_worksheet" mode="soox:toOfficeOpenXml">
                 <xsl:with-param name="shared-strings" select="$shared-strings" tunnel="yes"/>
             </xsl:apply-templates>
         </xsl:variable>
@@ -194,7 +228,7 @@
         </xd:desc>
         <xd:param name="simple_workbook"></xd:param>
     </xd:doc>
-    <xsl:function name="soox:sharedStrings.xml" visibility="public">
+    <xsl:function name="soox:sharedStrings.xml" visibility="private">
         <xsl:param name="simple_workbook"/>
         
         <!-- Collect the strings -->
@@ -202,7 +236,7 @@
         <xsl:variable name="distinct-cell-values" select="$all-cell-values => distinct-values()"/>
         
         <xsl:variable name="content">
-            <sst  xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+            <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
                 <xsl:attribute name="count" select="$all-cell-values => count()"/>
                 <xsl:attribute name="uniqueCount" select="$distinct-cell-values => count()"/>
                 <xsl:for-each select="$distinct-cell-values">

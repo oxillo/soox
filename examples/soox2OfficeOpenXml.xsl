@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:soox="simple-open-office-xml"
+    xmlns:soox="simplify-office-open-xml"
     xmlns:math="http://www.w3.org/2005/xpath-functions/math"
     xmlns:map="http://www.w3.org/2005/xpath-functions/map"
     xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
@@ -29,9 +29,9 @@
     
     <xsl:template name="xsl:initial-template">
         <xsl:variable name="my:workbook" select="doc('example-workbook.soox')"/>
-        <xsl:variable name="xlsx-file" select="resolve-uri('generated-openoffice-workbook.xlsx',$base)"/>
-        <xsl:copy-of select="soox:toOpenOffice( $my:workbook, map{'uri':$xlsx-file} )"/>
-        <xsl:sequence select="soox:fromOpenOffice( $xlsx-file, map{} )"/>
+        <xsl:variable name="xlsx-file" select="resolve-uri('generated-OfficeOpenXml-workbook.xlsx',$base)"/>
+        <xsl:copy-of select="soox:toOfficeOpenXml( $my:workbook, map{'uri':$xlsx-file} )"/>
+        <xsl:sequence select="soox:fromOfficeOpenXml( $xlsx-file, map{} )"/>
     </xsl:template>
     
   

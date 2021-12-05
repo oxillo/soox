@@ -4,7 +4,7 @@
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
   xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
-  xmlns:soox="simple-open-office-xml"
+  xmlns:soox="simplify-office-open-xml"
   xmlns:s="soox"
   exclude-result-prefixes="#all" extension-element-prefixes="soox">
   

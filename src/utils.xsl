@@ -10,8 +10,8 @@
     xmlns:arch="http://expath.org/ns/archive"
     xmlns:file="http://expath.org/ns/file"
     xmlns:bin="http://expath.org/ns/binary"
-    xmlns:soox="simple-open-office-xml"
-    xmlns:sooxns="simple-open-office-xml/namespaces"
+    xmlns:soox="simplify-office-open-xml"
+    xmlns:sooxns="simplify-office-open-xml/namespaces"
     exclude-result-prefixes="#all">
     
     
@@ -58,7 +58,8 @@
     <xsl:function name="soox:extract-xmlfile-from-file-hierarchy" visibility="final">
         <xsl:param name="file-hierarchy" as="map(xs:string,map(xs:string,item()*))"/>
         <xsl:param name="xmlfile"/>
-        
+
+        <!--xsl:message expand-text="true">Extract {$xmlfile} out of {string-join(map:keys($file-hierarchy),'#')}</xsl:message-->
         <xsl:sequence select="$file-hierarchy($xmlfile)('content') => bin:decode-string('UTF-8') => parse-xml()"/>
     </xsl:function>
     
