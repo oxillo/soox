@@ -4,8 +4,8 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
-    xmlns:soox="simple-office-open-xml"
-    xmlns:opc="simple-office-open-xml/open-packaging-conventions"
+    xmlns:soox="simplify-office-open-xml"
+    xmlns:opc="simplify-office-open-xml/open-packaging-conventions"
     exclude-result-prefixes="#all"
     extension-element-prefixes="opc">
     

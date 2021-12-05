@@ -6,7 +6,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
-    xmlns:soox="simple-office-open-xml"
+    xmlns:soox="simplify-office-open-xml"
     xmlns:s="soox"
     xmlns:map="http://www.w3.org/2005/xpath-functions/map"
     xmlns:arch="http://expath.org/ns/archive"

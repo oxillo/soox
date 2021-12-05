@@ -10,8 +10,8 @@
     xmlns:arch="http://expath.org/ns/archive"
     xmlns:file="http://expath.org/ns/file"
     xmlns:bin="http://expath.org/ns/binary"
-    xmlns:soox="simple-office-open-xml"
-    xmlns:sooxns="simple-office-open-xml/namespaces"
+    xmlns:soox="simplify-office-open-xml"
+    xmlns:sooxns="simplify-office-open-xml/namespaces"
     exclude-result-prefixes="#all">
     
     
