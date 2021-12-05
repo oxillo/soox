@@ -1,6 +1,7 @@
 # ignore xspec results
 /tests/*report.html
 /tests/*result.html
+/tests/xspec/
 
 # ignore local documentation
 /ECMA376
