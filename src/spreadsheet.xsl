@@ -63,6 +63,7 @@
     <xsl:function name="soox:encode-spreadsheet_part" visibility="public">
         <xsl:param name="elem"/>
         
+        <xsl:variable name="base" select="'/xl'"/>
         <xsl:variable name="sharedStrings.xml" select="$elem => soox:sharedStrings.xml()"/>
         <xsl:variable name="worksheets" as="map(*)">
             <xsl:variable name="ws" as="map(*)*">
@@ -70,7 +71,7 @@
                 <xsl:variable name="shared-strings" select="$sharedStrings.xml('content')//*:sst/*:si/*:t/text()"/>
                 <!--application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml-->
                 <xsl:for-each select="$elem/s:worksheet">
-                    <xsl:variable name="wsfilename" select="'xl/worksheets/sheet'||position()||'.xml'"/>
+                    <xsl:variable name="wsfilename" select="$base||'/worksheets/sheet'||position()||'.xml'"/>
                     <!--xsl:sequence select="current()=>xlwfile:worksheet.xml()=>xlwfn:pack-into($wsfilename, $wstype)"/-->
                     <xsl:sequence select="map:entry($wsfilename,current()=>soox:worksheet.xml($shared-strings))"/>
                 </xsl:for-each>
@@ -79,13 +80,13 @@
         </xsl:variable>
         <xsl:variable name="files" select="map:merge((
             $worksheets,
-            $elem => soox:styles.xml('xl/styles.xml'),
-            map:entry('xl/sharedStrings.xml', $sharedStrings.xml)))"/>
+            $elem => soox:styles.xml($base||'/styles.xml'),
+            map:entry($base||'/sharedStrings.xml', $sharedStrings.xml)))"/>
         <xsl:variable name="workbook.xml.rels" select="$files => soox:build-relationship-file('xl')"/>
         <xsl:variable name="workbook.xml" select="$elem => soox:workbook.xml( $workbook.xml.rels )"/>
         
         
-        <xsl:sequence select="map:merge(($files,map{'xl/workbook.xml':$workbook.xml, 'xl/_rels/workbook.xml.rels':$workbook.xml.rels}))"/>
+        <xsl:sequence select="map:merge(($files,map{$base||'/workbook.xml':$workbook.xml, $base||'/_rels/workbook.xml.rels':$workbook.xml.rels}))"/>
     </xsl:function>
     
     
