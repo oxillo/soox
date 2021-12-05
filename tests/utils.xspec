@@ -3,7 +3,6 @@
     xmlns:file="http://expath.org/ns/file"
     xmlns:arch="http://expath.org/ns/archive"
     xmlns:map="http://www.w3.org/2005/xpath-functions/map"
-    xmlns:xlwfn="xlwriter-functions"
     xslt-version="3.0"
     run-as="external"
     stylesheet="../src/utils.xsl">

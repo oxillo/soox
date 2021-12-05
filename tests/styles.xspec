@@ -5,8 +5,6 @@
     xmlns:arch="http://expath.org/ns/archive"
     xmlns:bin="http://expath.org/ns/binary"
     xmlns:map="http://www.w3.org/2005/xpath-functions/map"
-    xmlns:xlwfn="xlwriter-functions"
-    xmlns:xlwfile="xlwriter-files"
     xmlns:ct="http://schemas.openxmlformats.org/package/2006/content-types"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"

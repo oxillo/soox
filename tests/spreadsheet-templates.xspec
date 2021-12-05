@@ -2,7 +2,7 @@
 <x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
     xmlns:xh="xspec-helpers"
     xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
-    xmlns:soox="simple-open-office-xml"
+    xmlns:soox="simplify-office-open-xml"
     xmlns:my="my"
     xslt-version="3.0"
     run-as="external"
