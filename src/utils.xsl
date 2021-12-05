@@ -58,7 +58,8 @@
     <xsl:function name="soox:extract-xmlfile-from-file-hierarchy" visibility="final">
         <xsl:param name="file-hierarchy" as="map(xs:string,map(xs:string,item()*))"/>
         <xsl:param name="xmlfile"/>
-        
+
+        <!--xsl:message expand-text="true">Extract {$xmlfile} out of {string-join(map:keys($file-hierarchy),'#')}</xsl:message-->
         <xsl:sequence select="$file-hierarchy($xmlfile)('content') => bin:decode-string('UTF-8') => parse-xml()"/>
     </xsl:function>
     

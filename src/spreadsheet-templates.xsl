@@ -247,11 +247,12 @@
   <xsl:template match="sml:sheet" mode="soox:fromOfficeOpenXml">
     <xsl:param name="file-hierarchy" tunnel="yes"/>
     <xsl:param name="relationship" tunnel="yes"/>
+    <xsl:param name="base" tunnel="yes"/>
     
     <xsl:variable name="relation-id" select="@*:id" as="xs:string"/>
     <xsl:variable name="worksheet">
       <xsl:variable name="fname" select="$relationship//*[@Id = $relation-id]/@Target"/>
-      <xsl:sequence select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy( $fname )"/>
+      <xsl:sequence select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy( $base||$fname )"/>
     </xsl:variable>
     <xsl:apply-templates select="$worksheet" mode="soox:fromOfficeOpenXml">
       <xsl:with-param name="sheet-attributes" select="map{'name':@name, 'state':@state}" tunnel="yes"/>

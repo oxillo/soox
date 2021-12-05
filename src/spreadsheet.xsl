@@ -36,25 +36,31 @@
     
     
     <xsl:function name="soox:decode-spreadsheet-part" visibility="public">
-        <xsl:param name="file-hierarchy"/>
+        <xsl:param name="parts"/>
+        <xsl:param name="part"/>
         
-        <xsl:variable name="office-fname" select="$file-hierarchy('$root')('name')"/>
-        <xsl:variable name="relationship" select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy('_rels/'||$office-fname||'.rels')"/>
-        <xsl:variable name="workbook" select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy( $office-fname )"/>
+        <xsl:variable name="segments" select="tokenize($part,'/')"/>
+        <xsl:variable name="base" select="string-join($segments[position() lt last()],'/')||'/'"/>
+        <xsl:variable name="main-fname" select="$segments[last()]"/>
+        <xsl:message expand-text="true">Base = {$base} - main = {$main-fname}</xsl:message>
+        <xsl:variable name="office-fname" select="$parts('$root')('name')"/>
+        <xsl:variable name="relationship" select="$parts => soox:extract-xmlfile-from-file-hierarchy($base||'_rels/'||$main-fname||'.rels')"/>
+        <xsl:variable name="workbook" select="$parts => soox:extract-xmlfile-from-file-hierarchy( $part )"/>
         <xsl:variable name="sharedstrings">
             <xsl:variable name="fname" select="$relationship => soox:get-relationships-of-type('http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings')"/>
-            <xsl:sequence select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy( $fname[1]/@Target )"/>
+            <xsl:sequence select="$parts => soox:extract-xmlfile-from-file-hierarchy($base||$fname[1]/@Target )"/>
         </xsl:variable>
         <xsl:variable name="sharedstrings-list" select="$sharedstrings//*:t/text()"/>
         <xsl:variable name="styles">
             <xsl:variable name="fname" select="$relationship => soox:get-relationships-of-type('http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles')"/>
-            <xsl:sequence select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy( $fname[1]/@Target )"/>
+            <xsl:sequence select="$parts => soox:extract-xmlfile-from-file-hierarchy($base||$fname[1]/@Target )"/>
         </xsl:variable>
         
         <xsl:apply-templates select="$workbook" mode="soox:fromOfficeOpenXml">
-            <xsl:with-param name="file-hierarchy" select="$file-hierarchy" tunnel="yes"/>
+            <xsl:with-param name="file-hierarchy" select="$parts" tunnel="yes"/>
             <xsl:with-param name="sharedstrings-list" select="$sharedstrings-list" tunnel="yes"/>
             <xsl:with-param name="relationship" select="$relationship" tunnel="yes"/>
+            <xsl:with-param name="base" select="$base" tunnel="yes"/>
         </xsl:apply-templates>
     </xsl:function>
     
