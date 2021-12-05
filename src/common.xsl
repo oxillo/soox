@@ -7,8 +7,8 @@
   xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
   xmlns:sooxns="simple-open-office-xml/namespaces"
   xmlns:map="http://www.w3.org/2005/xpath-functions/map"
-  xmlns:soox="simple-open-office-xml"
-  xmlns:opc="simple-open-office-xml/open-packaging-conventions"
+  xmlns:soox="simple-office-open-xml"
+  xmlns:opc="simple-office-open-xml/open-packaging-conventions"
   xmlns:s="soox"
   xmlns:bin="http://expath.org/ns/binary"
   exclude-result-prefixes="#all"
@@ -29,13 +29,13 @@
   
   <xd:doc>
     <xd:desc>
-      <xd:p>Generate the Open Office file hierarchy from the input SOOX document</xd:p>
+      <xd:p>Generate the Office Open Xml file hierarchy from the input SOOX document</xd:p>
     </xd:desc>
     <xd:param name="doc">the SOOX document</xd:param>
     <xd:param name="options"></xd:param>
-    <xd:return>A map ( filepath : file details (content, type,...) that represents the file hierachy of OpenOffice document</xd:return>
+    <xd:return>A map ( filepath : file details (content, type,...) that represents the file hierachy of Office open Xml document</xd:return>
   </xd:doc>
-  <xsl:function name="soox:generate-OpenOffice-file-hierarchy" visibility="public">
+  <xsl:function name="soox:generate-OfficeOpenXml-file-hierarchy" visibility="public">
     <xsl:param name="doc" as="document-node()"/>
     <xsl:param name="options"/>
       
@@ -63,7 +63,7 @@
     <xd:param name="file-hierarchy">the set of OpenOffice files as a map</xd:param>
     <xd:param name="uri">uri of the file to write</xd:param>
   </xd:doc>
-  <xsl:function name="soox:zip-OpenOffice-file-hierarchy" visibility="public">
+  <xsl:function name="soox:zip-OfficeOpenXml-file-hierarchy" visibility="public">
     <xsl:param name="file-hierarchy" as="map(*)"/>
     <xsl:param name="uri"/>
     
@@ -81,7 +81,7 @@
     </xd:desc>
     <xd:param name="uri">uri of the file to write</xd:param>
   </xd:doc>
-  <xsl:function name="soox:unzip-OpenOffice-file-hierarchy" visibility="public">
+  <xsl:function name="soox:unzip-OfficeOpenXml-file-hierarchy" visibility="public">
     <xsl:param name="uri"/>
     
     <!-- unpack parts -->

@@ -7,7 +7,7 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
     xmlns:map="http://www.w3.org/2005/xpath-functions/map"
-    xmlns:soox="simple-open-office-xml"
+    xmlns:soox="simple-office-open-xml"
     xmlns:opc="simple-office-open-xml/open-packaging-conventions"
     exclude-result-prefixes="#all">
     <xd:doc scope="package">

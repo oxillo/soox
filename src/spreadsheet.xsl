@@ -6,7 +6,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
-    xmlns:soox="simple-open-office-xml"
+    xmlns:soox="simple-office-open-xml"
     xmlns:s="soox"
     xmlns:map="http://www.w3.org/2005/xpath-functions/map"
     xmlns:arch="http://expath.org/ns/archive"
@@ -51,7 +51,7 @@
             <xsl:sequence select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy( $fname[1]/@Target )"/>
         </xsl:variable>
         
-        <xsl:apply-templates select="$workbook" mode="soox:fromOpenOffice">
+        <xsl:apply-templates select="$workbook" mode="soox:fromOfficeOpenXml">
             <xsl:with-param name="file-hierarchy" select="$file-hierarchy" tunnel="yes"/>
             <xsl:with-param name="sharedstrings-list" select="$sharedstrings-list" tunnel="yes"/>
             <xsl:with-param name="relationship" select="$relationship" tunnel="yes"/>
@@ -176,7 +176,7 @@
         <xsl:param name="shared-strings" as="xs:string*"/>
         
         <xsl:variable name="content">
-            <xsl:apply-templates select="$simple_worksheet" mode="soox:toOpenOffice">
+            <xsl:apply-templates select="$simple_worksheet" mode="soox:toOfficeOpenXml">
                 <xsl:with-param name="shared-strings" select="$shared-strings" tunnel="yes"/>
             </xsl:apply-templates>
         </xsl:variable>
