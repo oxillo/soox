@@ -39,7 +39,7 @@
         <xsl:param name="partname"/>
         
         <!-- Extract workbook file -->
-        <xsl:variable name="workbook" select="$parts => soox:extract-xmlfile-from-file-hierarchy( $partname )"/>
+        <xsl:variable name="workbook" select="$parts => soox:get-content( $partname )"/>
         
         <!-- Decompose partname into segments to extract the base and basename -->
         <!-- /xl/workbook.xml will give base='/xl/' and basename='workbook.xml' --> 
@@ -48,13 +48,13 @@
         <xsl:variable name="basename" select="$segments[last()]"/>
         
         <!-- Extract relationship file for partname -->
-        <xsl:variable name="relationship" select="$parts => soox:extract-xmlfile-from-file-hierarchy($base||'_rels/'||$basename||'.rels')"/>
+        <xsl:variable name="relationship" select="$parts => soox:get-content($base||'_rels/'||$basename||'.rels')"/>
         
         <!-- Extract list of shared-strings -->
         <xsl:variable name="sharedstrings-list" as="xs:string*">
             <xsl:variable name="sharedstrings">
                 <xsl:variable name="fname" select="$relationship => soox:get-relationships-of-type('http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings')"/>
-                <xsl:sequence select="$parts => soox:extract-xmlfile-from-file-hierarchy($base||$fname[1]/@Target )"/>
+                <xsl:sequence select="$parts => soox:get-content($base||$fname[1]/@Target )"/>
             </xsl:variable>
             <xsl:sequence select="$sharedstrings//*:t/text()"/>
         </xsl:variable>
@@ -62,7 +62,7 @@
         <!-- Extract styles -->
         <xsl:variable name="styles">
             <xsl:variable name="fname" select="$relationship => soox:get-relationships-of-type('http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles')"/>
-            <xsl:sequence select="$parts => soox:extract-xmlfile-from-file-hierarchy($base||$fname[1]/@Target )"/>
+            <xsl:sequence select="$parts => soox:get-content($base||$fname[1]/@Target )"/>
         </xsl:variable>
         
         <!-- Process workbook -->

@@ -61,15 +61,8 @@
     <xsl:function name="soox:fromOfficeOpenXml" visibility="public">
         <xsl:param name="uri"/>
         <xsl:param name="options" as="map(*)"/>
-        <xsl:variable name="ooxml-parts" as="map(*)">
-            <xsl:variable name="unzipped" select="opc:unzip(resolve-uri($uri))"/>
-            <xsl:map>
-                <xsl:for-each select="map:keys($unzipped)">
-                    <xsl:map-entry key="'/'||current()" select="$unzipped(current())"/>
-                </xsl:for-each>
-            </xsl:map>
-        </xsl:variable> 
         
+        <xsl:variable name="ooxml-parts" select="opc:unzip(resolve-uri($uri))"/>
         
         <xsl:if test="$ooxml-parts=>map:contains('/[Content_Types].xml')">
             <!-- decode [Content_Types].xml -->

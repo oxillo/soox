@@ -9,7 +9,11 @@
     xmlns:map="http://www.w3.org/2005/xpath-functions/map"
     xmlns:soox="simplify-office-open-xml"
     xmlns:opc="simplify-office-open-xml/open-packaging-conventions"
-    exclude-result-prefixes="#all">
+    xmlns:bin="http://expath.org/ns/binary"
+    xmlns:arch="http://expath.org/ns/archive"
+    xmlns:file="http://expath.org/ns/file"
+    exclude-result-prefixes="#all"
+    extension-element-prefixes="bin arch file soox">
     <xd:doc scope="package">
         <xd:desc>
             <xd:p><xd:b>Created on:</xd:b> Dec 4, 2021</xd:p>
@@ -20,6 +24,9 @@
     </xd:doc>
     
     <xsl:use-package name="soox:utils" version="1.0"/>
+    
+    <xsl:variable name="need-soox-extensions" static="true" 
+        select="not(function-available('bin:encode-string') and function-available('arch:create-map') and function-available('file:write-binary'))"/>
     
     <xd:doc>
         <xd:desc>
@@ -40,18 +47,24 @@
         <!-- Generate [Content-Types].xml from parts -->
         <xsl:variable name="package" select="map:merge(($parts,opc:generate-content-types($parts),opc:generate-package-relationships($parts)))"/>
         
-        <!-- function to encode each XML file/element into a UTF-8 string -->
-        <xsl:variable name="encode-file-entry-fn" select="function($fname, $fmap){
-            map:entry(substring-after($fname,'/'), map{'content' : $fmap('content') => serialize() => bin:encode-string('UTF-8')})
-            }" xmlns:bin="http://expath.org/ns/binary"/>
         
-        <!-- encode each file of the hierarchy and build the archive -->
-        <xsl:variable name="zipped-file-hierarchy"
-            select="map:for-each( $package, $encode-file-entry-fn ) => map:merge() => arch:create-map()" xmlns:arch="http://expath.org/ns/archive"/>
-        
+        <xsl:variable name="serialized-package" as="map(*)">
+            <xsl:map>
+                <xsl:for-each select="map:keys($package)">
+                    <xsl:variable name="content" select="$package(current())('content')=>serialize()"/>
+                    <xsl:map-entry key="substring-after(current(),'/')" select="map{'content':$content=> bin:encode-string('UTF-8')}" use-when="not($need-soox-extensions)"/>
+                    <xsl:map-entry key="substring-after(current(),'/')" select="map{'content':$content}" use-when="$need-soox-extensions"/>
+                </xsl:for-each>
+            </xsl:map>
+        </xsl:variable>
+
         <!-- write the archive to disk -->
-        <xsl:sequence select="file:write-binary( $uri, $zipped-file-hierarchy )" xmlns:file="http://expath.org/ns/file"/>
+        <xsl:sequence select="file:write-binary( $uri, arch:create-map($serialized-package))" use-when="not($need-soox-extensions)"/>
+        <xsl:sequence select="soox:zip( $serialized-package, map{'uri':substring-after($uri,'file:/')})" use-when="$need-soox-extensions"/>
     </xsl:function>
+    
+    
+    
     
     
     <xd:doc>
@@ -63,18 +76,40 @@
     <xsl:function name="opc:unzip" visibility="public">
         <xsl:param name="uri"/>
         
-        <!-- read the archive from disk -->
-        <xsl:variable  name="unzipped" select="file:read-binary( $uri )" xmlns:file="http://expath.org/ns/file"/>
+        <xsl:variable name="parts" as="map(*)" use-when="not($need-soox-extensions)">
+            <!-- read the archive from disk -->
+            <xsl:variable  name="unzipped" select="file:read-binary( $uri )"/>
+            
+            <!-- -->
+            <xsl:variable  name="encoded-file-hierarchy" select="arch:entries-map( $unzipped, true() )"/>
+            <xsl:variable name="decode" select="function($k,$v){
+                if(ends-with($k,'.xml') or ends-with($k,'.rels')) then 
+                map:entry('/'||$k, map{'content': parse-xml(bin:decode-string($v?content,'UTF-8'))})
+                else
+                map:entry('/'||$k, map{'content': $v?content})
+                }" use-when="function-available('bin:decode-string')"/>
+            <xsl:sequence select="map:for-each($encoded-file-hierarchy,$decode)=>map:merge()"/>  
+        </xsl:variable>
         
-        <!-- -->
-        <xsl:variable  name="parts" select="arch:entries-map( $unzipped, true() )"  xmlns:arch="http://expath.org/ns/archive"/>
+        <xsl:variable name="parts" as="map(*)" use-when="$need-soox-extensions">
+            <xsl:variable name="unzipped" select="soox:unzip(substring-after($uri,'file:/'))"/>
+            <xsl:map>
+                <xsl:for-each select="map:keys($unzipped)">
+                    <xsl:variable name="fname" select="current()"/>
+                    <xsl:variable name="content" select="$unzipped($fname)('content')"/>
+                    <xsl:variable name="isxml" select="ends-with($fname,'.xml') or ends-with($fname,'.rels')"/>
+                    <xsl:map-entry key="'/'||$fname" select="map{'content' : if ($isxml) then parse-xml($content) else $content}"/>
+                </xsl:for-each>  
+            </xsl:map>
+        </xsl:variable>
         
-        <xsl:variable name="content-types" select="$parts => soox:extract-xmlfile-from-file-hierarchy('[Content_Types].xml')"/>
+        
+        <xsl:variable name="content-types" select="$parts=>soox:get-content('/[Content_Types].xml')"/>
         <xsl:variable name="overrides" select="$content-types//Override" xpath-default-namespace="http://schemas.openxmlformats.org/package/2006/content-types"/>
         <xsl:variable name="defaults" select="$content-types//Default" xpath-default-namespace="http://schemas.openxmlformats.org/package/2006/content-types"/>
         
         <xsl:map>
-            <xsl:for-each select="map:keys($parts)[. ne '[Content_Types.xml']">
+            <xsl:for-each select="map:keys($parts)[. ne '/[Content_Types.xml']">
                 <xsl:variable name="partname" select="current()"/>
                 <xsl:variable name="type" select="($overrides[@PartName=$partname]/@ContentType,$defaults[ends-with($partname,@Extension)]/@ContentType,'')[1]" xpath-default-namespace="http://schemas.openxmlformats.org/package/2006/content-types"/>
                 <xsl:map-entry key="$partname">

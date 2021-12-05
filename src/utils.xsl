@@ -55,12 +55,12 @@
         <xd:param name="xmlfile">the name of the XML file to extract</xd:param>
         <xd:return>an XML document-node</xd:return>
     </xd:doc>
-    <xsl:function name="soox:extract-xmlfile-from-file-hierarchy" visibility="final">
+    <xsl:function name="soox:get-content" visibility="final">
         <xsl:param name="file-hierarchy" as="map(xs:string,map(xs:string,item()*))"/>
         <xsl:param name="xmlfile"/>
 
         <!--xsl:message expand-text="true">Extract {$xmlfile} out of {string-join(map:keys($file-hierarchy),'#')}</xsl:message-->
-        <xsl:sequence select="$file-hierarchy($xmlfile)('content') => bin:decode-string('UTF-8') => parse-xml()"/>
+        <xsl:sequence select="$file-hierarchy($xmlfile)('content')"/>
     </xsl:function>
     
     <xsl:function name="soox:get-relationships-of-type" visibility="public">

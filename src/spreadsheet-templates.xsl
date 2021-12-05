@@ -252,7 +252,7 @@
     <xsl:variable name="relation-id" select="@*:id" as="xs:string"/>
     <xsl:variable name="worksheet">
       <xsl:variable name="fname" select="$relationship//*[@Id = $relation-id]/@Target"/>
-      <xsl:sequence select="$file-hierarchy => soox:extract-xmlfile-from-file-hierarchy( $base||$fname )"/>
+      <xsl:sequence select="$file-hierarchy => soox:get-content( $base||$fname )"/>
     </xsl:variable>
     <xsl:apply-templates select="$worksheet" mode="soox:fromOfficeOpenXml">
       <xsl:with-param name="sheet-attributes" select="map{'name':@name, 'state':@state}" tunnel="yes"/>
