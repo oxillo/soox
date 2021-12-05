@@ -21,7 +21,6 @@
         </xd:desc>
     </xd:doc>
     
-    <xsl:use-package name="soox:common" version="1.0"/>
     <!-- support for Open Packaging Conventions --> 
     <xsl:use-package name="soox:opc" version="1.0"/>
     <xsl:use-package name="soox:spreadsheet" version="1.0"/>
