@@ -84,15 +84,17 @@
     </xsl:element>
   </xsl:template>
   
+  
+  <xd:doc>
+    <xd:desc>
+      <xd:p>Process soox:data element to a sheetData element</xd:p>
+      <xd:p>Cells ar grouped in rows (in ascending order)</xd:p>
+    </xd:desc>
+  </xd:doc>
   <xsl:template match="s:data"  mode="soox:toOfficeOpenXml">
-    
-    <!--cols xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-      <col min="1" max="1" width="20.69921875" customWidth="1"/>
-      <col min="2" max="2" width="70.69921875" customWidth="1"/>
-    </cols-->
     <xsl:element name="sheetData" _namespace="{$ns-sml}">
       <xsl:for-each-group select="s:cell" group-by="@row" >
-        <xsl:sort select="current-grouping-key()" order="ascending"/>
+        <xsl:sort select="current-grouping-key()" order="ascending" data-type="number"/>
         <xsl:element name="row" _namespace="{$ns-sml}">
           <xsl:attribute name="r" select="current-grouping-key()"/>
           <!--xsl:attribute name="spans">1:2</xsl:attribute-->
