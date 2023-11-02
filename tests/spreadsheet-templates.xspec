@@ -9,7 +9,7 @@
     stylesheet="../src/spreadsheet-templates.xsl">
     
     
-    <x:variable name="x:saxon-config" href="../src/saxon.config"/>
+    <x:variable name="x:saxon-config" href="../src/saxon-HE.config"/>
 
     <x:helper stylesheet="helpers/helpers.xsl" />
     
@@ -17,8 +17,8 @@
         <x:variable name="my:worksheet" href="data/worksheet.xml"/>
         
         <x:scenario label="when templates are applied on it,">
-            <x:context select="$my:worksheet/element()" mode="soox:toOpenOffice" >
-                <x:param name="shared-strings" select="('nombre','chaine','toto','flottant','date')" tunnel="yes"/>
+            <x:context select="$my:worksheet/element()" mode="soox:toOfficeOpenXml" >
+                <x:param name="shared-strings" select="('nombre','chaine','toto','flottant','date','Line #12')" tunnel="yes"/>
             </x:context>
             
             <x:expect label="the computed range &lt;dimension&gt; should be as expected" href="data/expected_sheet1.xml"
@@ -35,6 +35,21 @@
             
             <x:expect label="all &lt;row&gt; (but dates row 4) should be as expected" href="data/expected_sheet1.xml"
                 select="xh:remove-whitespacesonly-nodes(.)/sml:worksheet/sml:sheetData/sml:row" test="/sml:worksheet/sml:sheetData/sml:row"/>
+        </x:scenario>
+        
+        <x:scenario label="when templates are applied on it,">
+            <x:context select="$my:worksheet/element()" mode="soox:toOfficeOpenXml" >
+                <x:param name="shared-strings" select="('nombre','chaine','toto','flottant','date','Line #12')" tunnel="yes"/>
+            </x:context>
+            
+            <x:expect label="the rows should be ordered in ascending order" as="attribute(r)*" 
+                test="//sml:row/@r" select="//sml:row/@r">
+                <sml:row r="1"/>
+                <sml:row r="2"/>
+                <sml:row r="3"/>
+                <sml:row r="4"/>
+                <sml:row r="12"/>
+            </x:expect>
         </x:scenario>
         
         <!--<x:scenario label="when xlwfile:worksheet.xml() is called on it," catch="yes">
