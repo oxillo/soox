@@ -28,7 +28,7 @@ Use 'uri' key in options-map to write the Office Open Xml document to that uri
 ## Simplify Open Office XML format
 
 ### Spreadsheet
-```
+```xml
 <workbook xmln="soox">
     <worksheet name="1st sheet">
         <data>
@@ -51,4 +51,24 @@ Use 'uri' key in options-map to write the Office Open Xml document to that uri
         </data>
     </worksheet>    
 </workbook>    
+```
+
+### Styling
+ 
+Columns and rows can be customized by adding a `<style/>` element inside the `<worksheet/>` element.
+The column width is set with an `width` element with the following attributes :
+  - The `col` attribute (mandatory) corresponds to the index of the column (starting at 1).
+  - The `w` attribute (exclusive with `px`) corresponds to the width of the column.
+  - The `px` attribute (exclusive with `w`) corresponds to the pixel width of the column.
+
+```xml
+<worksheet name="1st sheet">
+    <style>
+        <width col="1" w="15.3"/>
+        <width col="2" px="300"/>
+    </style>
+    <data>
+      ...
+    </data>
+</worksheet>
 ```
