@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:xh="xspec-helpers"
     xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
     xmlns:soox="simplify-office-open-xml"
+    xmlns:s="soox"
     xmlns:my="my"
     xslt-version="3.0"
     run-as="external"
@@ -42,8 +44,8 @@
                 <x:param name="shared-strings" select="('nombre','chaine','toto','flottant','date','Line #12')" tunnel="yes"/>
             </x:context>
             
-            <x:expect label="the rows should be ordered in ascending order" as="attribute(r)*" 
-                test="//sml:row/@r" select="//sml:row/@r">
+            <x:expect label="the rows should be ordered in ascending order"
+                as="attribute(r)*" test="//sml:row/@r" select="//sml:row/@r">
                 <sml:row r="1"/>
                 <sml:row r="2"/>
                 <sml:row r="3"/>
@@ -51,6 +53,36 @@
                 <sml:row r="12"/>
             </x:expect>
         </x:scenario>
+        
+        <x:scenario label="when templates are applied on it,">
+            <x:context mode="soox:toOfficeOpenXml">
+                <s:worksheet name="Feuil1">
+                    <s:style>
+                        <s:width col="1" w="15.2"/>
+                        <s:width col="2" px="369"/>
+                        <s:width col="3" w="25.3" px="215"/>
+                    </s:style>
+                    <s:data>
+                        <s:cell col="1" row="1">
+                            <s:v>Key</s:v>
+                        </s:cell> 
+                        <s:cell col="2" row="1">
+                            <s:v>Value</s:v>
+                        </s:cell>
+                    </s:data>
+                </s:worksheet>
+            </x:context>
+            
+            <x:expect label="the rows "
+                test="//sml:cols"  select="//sml:cols">
+                <sml:cols>
+                    <sml:col min="1" max="1" width="15.2" customWidth="1"/>
+                    <sml:col min="2" max="2" width="52" customWidth="1"/>
+                    <sml:col min="3" max="3" width="25.3" customWidth="1"/>
+                </sml:cols>
+            </x:expect>
+        </x:scenario>
+        
         
         <!--<x:scenario label="when xlwfile:worksheet.xml() is called on it," catch="yes">
             <x:call function="soox:worksheet.xml">

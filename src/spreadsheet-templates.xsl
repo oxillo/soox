@@ -84,7 +84,22 @@
     </xsl:element>
   </xsl:template>
   
-  
+  <xsl:template match="s:style[parent::s:worksheet]"  mode="soox:toOfficeOpenXml">
+    <xsl:if test="s:width">
+      <xsl:element name="cols" _namespace="{$ns-sml}">
+        <xsl:for-each select="s:width">
+          <xsl:sort select="number(@col)" order="ascending"/>
+          <xsl:element name="col" _namespace="{$ns-sml}">
+            <xsl:attribute name="min" select="@col"/>
+            <xsl:attribute name="max" select="@col"/>
+            <xsl:attribute name="width" select="(@w,(@px - 5) div 7.0)[1]"/>
+            <xsl:attribute name="customWidth">1</xsl:attribute>
+          </xsl:element>
+        </xsl:for-each>
+      </xsl:element>
+    </xsl:if>
+  </xsl:template>
+
   <xd:doc>
     <xd:desc>
       <xd:p>Process soox:data element to a sheetData element</xd:p>
