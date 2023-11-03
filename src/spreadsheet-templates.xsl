@@ -107,23 +107,81 @@
     </xd:desc>
   </xd:doc>
   <xsl:template match="s:data"  mode="soox:toOfficeOpenXml">
+    <xsl:param name="defautltRowHeight" tunnel="yes" select="12.8"/>
+    
     <xsl:element name="sheetData" _namespace="{$ns-sml}">
-      <xsl:for-each-group select="s:cell" group-by="@row" >
-        <xsl:sort select="current-grouping-key()" order="ascending" data-type="number"/>
+      <!-- Retrieve the specification of row heights -->
+      <xsl:variable name="rowHeights" as="element(s:height)*">
+        <xsl:for-each select="../s:style/s:height">
+          <xsl:copy>
+            <xsl:copy-of select="@row"/>
+            <xsl:attribute name="h" select="soox:parseRowHeight(@h)"/>
+          </xsl:copy>
+        </xsl:for-each>
+      </xsl:variable>
+      
+      <xsl:variable name="rowlist" select="(../s:style/s:height/@row,s:cell/@row)=>distinct-values()" as="xs:integer*"/>
+      <xsl:variable name="cells" select="s:cell" as="element(s:cell)*"/>
+      
+      <xsl:for-each select="$rowlist">
+        <xsl:sort data-type="number" order="ascending"/>
+        
+        <xsl:variable name="rownumber" select="current()"/>
+        <!-- determine the height of current row (if defined) -->
+        <xsl:variable name="thisRowHeight" select="$rowHeights[@row=$rownumber]" as="element(s:height)?"/>
         <xsl:element name="row" _namespace="{$ns-sml}">
-          <xsl:attribute name="r" select="current-grouping-key()"/>
+          <xsl:attribute name="r" select="$rownumber"/>
           <!--xsl:attribute name="spans">1:2</xsl:attribute-->
           <xsl:attribute name="customFormat">false</xsl:attribute>
-          <xsl:attribute name="ht">12.8</xsl:attribute>
+          <xsl:attribute name="ht" select="if (exists($thisRowHeight)) then $thisRowHeight/@h else $defautltRowHeight"/>
           <xsl:attribute name="hidden">false</xsl:attribute>
-          <xsl:attribute name="customHeight">false</xsl:attribute>
+          <xsl:attribute name="customHeight" select="if (exists($thisRowHeight)) then 'true' else 'false'"/>
+          <xsl:attribute name="outlineLevel">0</xsl:attribute>
+          <xsl:attribute name="collapsed">false</xsl:attribute>
+          <xsl:apply-templates select="$cells[@row=$rownumber]" mode="#current"/>
+        </xsl:element>
+      </xsl:for-each>
+      
+      <!--<xsl:for-each-group select="s:cell" group-by="@row" >
+        <xsl:sort select="current-grouping-key()" order="ascending" data-type="number"/>
+        
+        
+        <!-\- determine the height of current row (if defined) -\->
+        <xsl:variable name="thisRowHeight" select="$rowHeights[@row=current-grouping-key()]" as="element(s:height)?"/>
+        <xsl:element name="row" _namespace="{$ns-sml}">
+          <xsl:attribute name="r" select="current-grouping-key()"/>
+          <!-\-xsl:attribute name="spans">1:2</xsl:attribute-\->
+          <xsl:attribute name="customFormat">false</xsl:attribute>
+          <xsl:attribute name="ht" select="if (exists($thisRowHeight)) then $thisRowHeight/@h else 15"/>
+          <xsl:attribute name="hidden">false</xsl:attribute>
+          <xsl:attribute name="customHeight" select="if (exists($thisRowHeight)) then 'true' else 'false'"/>
           <xsl:attribute name="outlineLevel">0</xsl:attribute>
           <xsl:attribute name="collapsed">false</xsl:attribute>
           <xsl:apply-templates select="current-group()" mode="#current"/>
         </xsl:element>
-      </xsl:for-each-group>
+      </xsl:for-each-group>-->
     </xsl:element>
   </xsl:template>
+  
+  <xsl:function name="soox:parseRowHeight" as="xs:string?">
+    <xsl:param name="str" as="xs:string"/>
+    
+    <xsl:analyze-string select="$str=>normalize-space()" regex="^(\d+(\.\d+)?)\s*(cm|px)?$">
+      <xsl:matching-substring>
+        <xsl:choose>
+          <xsl:when test="regex-group(3)='px'">
+            <xsl:sequence select="number(regex-group(1)=>number() * 0.75) => format-number('0.###')"/>
+          </xsl:when>
+          <xsl:when test="regex-group(3)='cm'">
+            <xsl:sequence select="(regex-group(1)=>number() * 37.88) => format-number('0.###')"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:sequence select="regex-group(1) => number() => format-number('0.###')"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:matching-substring>
+    </xsl:analyze-string>
+  </xsl:function>
   
   <xsl:template match="s:cell"  mode="soox:toOfficeOpenXml">
     <xsl:param name="shared-strings" as="xs:string*" tunnel="yes"/>

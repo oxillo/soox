@@ -64,13 +64,14 @@
             <width col="3" w="35.3"/> <!-- column 3 is wide -->
             <width col="4" px="369"/> <!-- column 4 is set wide with pixels width (52.0)-->
             <width col="5" w="25.0" px="369"/> <!-- column 5 is set with 25.0 width (@w has priority over @px)-->
-            <width col="6" w="10.0" px="369"/>
-            <width col="7" w="20.0" px="369"/>
-            <width col="8" w="5.0" px="369"/>
+            <height row="2" h="20"/>
+            <height row="3" h="0.53cm"/>
+            <height row="4" h="40px"/>
+            <height row="5" h="50"/>
         </style>
         <data>
             <cell col="1" row="1">
-                <v>WIDTH</v>
+                <v>WIDTH/Height</v>
             </cell> 
             <cell col="2" row="1">
                 <v>5.2</v>
@@ -84,7 +85,18 @@
             <cell col="5" row="1">
                 <v>25.0</v>
             </cell>
-            
+            <cell col="1" row="2">
+                <v>h=20</v>
+            </cell>
+            <cell col="1" row="3">
+                <v>h=30</v>
+            </cell>
+            <cell col="1" row="4">
+                <v>h=40</v>
+            </cell>
+            <cell col="1" row="5">
+                <v>h=50</v>
+            </cell>
         </data>
     </worksheet>
 </workbook>
