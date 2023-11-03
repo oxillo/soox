@@ -61,11 +61,18 @@ The column width is set with an `width` element with the following attributes :
   - The `w` attribute (exclusive with `px`) corresponds to the width of the column.
   - The `px` attribute (exclusive with `w`) corresponds to the pixel width of the column.
 
+The row height is set with an `height` element with the following attributes :
+  - The `row` attribute (mandatory) corresponds to the index of the row (starting at 1).
+  - The `h` attribute (mandatory) corresponds to the height of the row. The format may specify a unit ('cm' for centimeters, 'px' for pixels)
+
 ```xml
 <worksheet name="1st sheet">
     <style>
         <width col="1" w="15.3"/>
         <width col="2" px="300"/>
+        <height row="1" h="300 px"/>
+        <height row="2" h="1cm"/>
+        <height row="3" h="20"/>
     </style>
     <data>
       ...

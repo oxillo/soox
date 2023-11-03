@@ -54,32 +54,79 @@
             </x:expect>
         </x:scenario>
         
-        <x:scenario label="when templates are applied on it,">
+        
+        <x:scenario label="when column widths are customized,">
             <x:context mode="soox:toOfficeOpenXml">
                 <s:worksheet name="Feuil1">
                     <s:style>
                         <s:width col="1" w="15.2"/>
                         <s:width col="2" px="369"/>
                         <s:width col="3" w="25.3" px="215"/>
+                        <s:height row="1" h="25.3"/>
+                        <s:height row="2" h="0.53cm"/>
+                        <s:height row="3" h="40px"/>
                     </s:style>
                     <s:data>
                         <s:cell col="1" row="1">
-                            <s:v>Key</s:v>
+                            <s:v>Cell (1,1)</s:v>
                         </s:cell> 
-                        <s:cell col="2" row="1">
-                            <s:v>Value</s:v>
+                        <s:cell col="2" row="2">
+                            <s:v>Cell (2,2)</s:v>
                         </s:cell>
                     </s:data>
                 </s:worksheet>
             </x:context>
             
-            <x:expect label="the rows "
-                test="//sml:cols"  select="//sml:cols">
-                <sml:cols>
-                    <sml:col min="1" max="1" width="15.2" customWidth="1"/>
-                    <sml:col min="2" max="2" width="52" customWidth="1"/>
-                    <sml:col min="3" max="3" width="25.3" customWidth="1"/>
-                </sml:cols>
+            <x:expect label="the 2nd column should have its width set to 15.2"
+                test="//sml:cols/sml:col[@min='1']" >
+                <sml:col min="1" max="1" width="15.2" customWidth="1"/>
+            </x:expect>
+            <x:expect label="the 2nd column should have its width set to 52"
+                test="//sml:cols/sml:col[@min='2']" >
+                <sml:col min="2" max="2" width="52" customWidth="1"/>
+            </x:expect>
+            <x:expect label="the 3nd column should have its width set to 25.3"
+                test="//sml:cols/sml:col[@min='3']" >
+                <sml:col min="3" max="3" width="25.3" customWidth="1"/>
+            </x:expect>
+        </x:scenario>
+        
+        <x:scenario label="when row heights are customized, ">
+            <x:context mode="soox:toOfficeOpenXml">
+                <s:worksheet name="Feuil1">
+                    <s:style>
+                        <s:width col="1" w="15.2"/>
+                        <s:width col="2" px="369"/>
+                        <s:width col="3" w="25.3" px="215"/>
+                        <s:height row="1" h="25.3"/>
+                        <s:height row="2" h="0.53cm"/>
+                        <s:height row="3" h="40px"/>
+                    </s:style>
+                    <s:data>
+                        <s:cell col="1" row="1">
+                            <s:v>Cell (1,1)</s:v>
+                        </s:cell> 
+                        <s:cell col="2" row="2">
+                            <s:v>Cell (2,2)</s:v>
+                        </s:cell>
+                    </s:data>
+                </s:worksheet>
+            </x:context>
+            
+            <x:expect label="the first row should have its height set at 25.3"
+                test="//sml:row[@r='1']" >
+                <sml:row r="1" customFormat="false" ht="25.3" hidden="false" customHeight="true"
+                    outlineLevel="0" collapsed="false">...</sml:row>
+            </x:expect>
+            <x:expect label="the 2nd row should have its height set at 20.076"
+                test="//sml:row[@r='2']" >
+                <sml:row r="2" customFormat="false" ht="20.076" hidden="false" customHeight="true"
+                    outlineLevel="0" collapsed="false">...</sml:row>
+            </x:expect>
+            <x:expect label="the 3rd row should have its height set at 30 (=40*0.75)"
+                test="//sml:row[@r='3']" >
+                <sml:row r="3" customFormat="false" ht="30" hidden="false" customHeight="true"
+                    outlineLevel="0" collapsed="false">...</sml:row>
             </x:expect>
         </x:scenario>
         
