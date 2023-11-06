@@ -25,7 +25,6 @@
   
   
   
-  
   <!--=======================================================================================================-->
   <!--== Conversion templates to Open Office                                                               ==-->
   <!--=======================================================================================================-->
@@ -84,6 +83,11 @@
     </xsl:element>
   </xsl:template>
   
+  <xd:doc>
+    <xd:desc>
+      <xd:p>Process </xd:p>
+    </xd:desc>
+  </xd:doc>
   <xsl:template match="s:style[parent::s:worksheet]"  mode="soox:toOfficeOpenXml">
     <xsl:if test="s:width">
       <xsl:element name="cols" _namespace="{$ns-sml}">
@@ -105,6 +109,7 @@
       <xd:p>Process soox:data element to a sheetData element</xd:p>
       <xd:p>Cells ar grouped in rows (in ascending order)</xd:p>
     </xd:desc>
+    <xd:param name="defautltRowHeight"></xd:param>
   </xd:doc>
   <xsl:template match="s:data"  mode="soox:toOfficeOpenXml">
     <xsl:param name="defautltRowHeight" tunnel="yes" select="12.8"/>
@@ -163,6 +168,13 @@
     </xsl:element>
   </xsl:template>
   
+  <xd:doc>
+    <xd:desc>
+      <xd:p></xd:p>
+    </xd:desc>
+    <xd:param name="str"></xd:param>
+    <xd:return></xd:return>
+  </xd:doc>
   <xsl:function name="soox:parseRowHeight" as="xs:string?">
     <xsl:param name="str" as="xs:string"/>
     
@@ -183,8 +195,16 @@
     </xsl:analyze-string>
   </xsl:function>
   
+  <xd:doc>
+    <xd:desc>
+      <xd:p></xd:p>
+    </xd:desc>
+    <xd:param name="shared-strings"></xd:param>
+    <xd:param name="cell-styles-map"></xd:param>
+  </xd:doc>
   <xsl:template match="s:cell"  mode="soox:toOfficeOpenXml">
     <xsl:param name="shared-strings" as="xs:string*" tunnel="yes"/>
+    <xsl:param name="cell-styles-map" as="map(xs:string,xs:integer)" tunnel="yes"/>
     
     <xsl:variable name="option-date-as-number" select="true()"/>
     
@@ -200,6 +220,7 @@
     
     <xsl:element name="c" _namespace="{$ns-sml}">
       <xsl:attribute name="r" select="soox:encode-cell-address(@col,@row)"/>
+      <xsl:variable name="styleIndex" select="$cell-styles-map(soox:styleSignature(s:style))"/>
       <xsl:attribute name="s">
         <xsl:choose>
           <xsl:when test="$is-date and $option-date-as-number">1</xsl:when>
@@ -241,6 +262,13 @@
     </xsl:element>
   </xsl:template>
   
+  
+  <xd:doc>
+    <xd:desc>
+      <xd:p></xd:p>
+    </xd:desc>
+    <xd:param name="shared-strings"></xd:param>
+  </xd:doc>
   <xsl:template match="s:v"  mode="soox:toOfficeOpenXml" xml:space="default">
     <xsl:param name="shared-strings" as="xs:string*" tunnel="yes"/>
     
@@ -292,11 +320,21 @@
     </xsl:element>  
   </xsl:template>
   
+  <xd:doc>
+    <xd:desc>
+      <xd:p></xd:p>
+    </xd:desc>
+  </xd:doc>
   <xsl:template match="s:f"  mode="soox:toOfficeOpenXml" xml:space="default">
     <xsl:element name="f" _namespace="{$ns-sml}">
     </xsl:element>
   </xsl:template>
   
+  <xd:doc>
+    <xd:desc>
+      <xd:p></xd:p>
+    </xd:desc>
+  </xd:doc>
   <xsl:template match="text()" mode="soox:toOfficeOpenXml"/>
   
   
@@ -309,16 +347,34 @@
   <xsl:variable name="ns-soox" select="'soox'" visibility="private"/>
   
   
+  <xd:doc>
+    <xd:desc>
+      <xd:p></xd:p>
+    </xd:desc>
+  </xd:doc>
   <xsl:template match="/" mode="soox:fromOfficeOpenXml">
     <xsl:apply-templates mode="#current"/>
   </xsl:template>
   
+  <xd:doc>
+    <xd:desc>
+      <xd:p></xd:p>
+    </xd:desc>
+  </xd:doc>
   <xsl:template match="sml:workbook" mode="soox:fromOfficeOpenXml">
     <xsl:element name="workbook" namespace="soox">
       <xsl:apply-templates mode="#current"/>
     </xsl:element>
   </xsl:template>
   
+  <xd:doc>
+    <xd:desc>
+      <xd:p></xd:p>
+    </xd:desc>
+    <xd:param name="file-hierarchy"></xd:param>
+    <xd:param name="relationship"></xd:param>
+    <xd:param name="base"></xd:param>
+  </xd:doc>
   <xsl:template match="sml:sheet" mode="soox:fromOfficeOpenXml">
     <xsl:param name="file-hierarchy" tunnel="yes"/>
     <xsl:param name="relationship" tunnel="yes"/>
@@ -334,6 +390,12 @@
     </xsl:apply-templates>
   </xsl:template>
   
+  <xd:doc>
+    <xd:desc>
+      <xd:p></xd:p>
+    </xd:desc>
+    <xd:param name="sheet-attributes"></xd:param>
+  </xd:doc>
   <xsl:template match="sml:worksheet" mode="soox:fromOfficeOpenXml">
     <xsl:param name="sheet-attributes" tunnel="yes"/>
     
@@ -343,16 +405,31 @@
     </xsl:element>
   </xsl:template>
   
+  <xd:doc>
+    <xd:desc>
+      <xd:p></xd:p>
+    </xd:desc>
+  </xd:doc>
   <xsl:template match="sml:sheetData" mode="soox:fromOfficeOpenXml">
     <xsl:element name="data" namespace="soox">
       <xsl:apply-templates mode="#current"/>
     </xsl:element>
   </xsl:template>
   
+  <xd:doc>
+    <xd:desc>
+      <xd:p></xd:p>
+    </xd:desc>
+  </xd:doc>
   <xsl:template match="sml:*" mode="soox:fromOfficeOpenXml">
     <xsl:apply-templates mode="#current"/>
   </xsl:template>
   
+  <xd:doc>
+    <xd:desc>
+      <xd:p></xd:p>
+    </xd:desc>
+  </xd:doc>
   <xsl:template match="sml:c" mode="soox:fromOfficeOpenXml">
     <xsl:element name="cell" namespace="soox">
       <xsl:variable name="address" select="soox:decode-cell-address(@r)"/>
@@ -362,6 +439,12 @@
     </xsl:element>
   </xsl:template>
   
+  <xd:doc>
+    <xd:desc>
+      <xd:p></xd:p>
+    </xd:desc>
+    <xd:param name="sharedstrings-list"></xd:param>
+  </xd:doc>
   <xsl:template match="sml:v" mode="soox:fromOfficeOpenXml">
     <xsl:param name="sharedstrings-list" tunnel="yes"/>
     

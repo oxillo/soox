@@ -71,12 +71,18 @@
         </style>
         <data>
             <cell col="1" row="1">
+                <style>
+                    <fill bg="FFFF00FF"/>
+                </style>
                 <v>WIDTH/Height</v>
             </cell> 
             <cell col="2" row="1">
                 <v>5.2</v>
             </cell>
             <cell col="3" row="1">
+                <style>
+                    <fill bg="FFF0FF0F"/>
+                </style>
                 <v>35.3</v>
             </cell>
             <cell col="4" row="1">

@@ -87,21 +87,25 @@
         <xsl:param name="elem"/>
         <xsl:param name="base"/>
         
+        <!-- Compute items shared across worksheets : shared strings and styles -->
         <xsl:variable name="sharedStrings.xml" select="$elem => soox:sharedStrings.xml()"/>
+        <xsl:variable name="styles.xml" select="$elem => soox:styles.xml()"/>
+        <xsl:variable name="cell-styles-map" select="$elem//s:cell/s:style => soox:buildCellStylesMap()"/>
+        
         <xsl:variable name="worksheets" as="map(*)">
             <xsl:variable name="ws" as="map(*)*">
                 <xsl:variable name="wstype" select="'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet'"/>
                 <xsl:variable name="shared-strings" select="$sharedStrings.xml('content')//*:sst/*:si/*:t/text()"/>
                 <xsl:for-each select="$elem/s:worksheet">
                     <xsl:variable name="wsfilename" select="$base||'worksheets/sheet'||position()||'.xml'"/>
-                    <xsl:sequence select="map:entry($wsfilename,current()=>soox:worksheet.xml($shared-strings))"/>
+                    <xsl:sequence select="map:entry($wsfilename,current()=>soox:worksheet.xml($shared-strings, $cell-styles-map))"/>
                 </xsl:for-each>
             </xsl:variable>
             <xsl:sequence select="map:merge($ws)"/>
         </xsl:variable>
         <xsl:variable name="files" select="map:merge((
             $worksheets,
-            $elem => soox:styles.xml($base||'styles.xml'),
+            map:entry($base||'styles.xml', $styles.xml),
             map:entry($base||'sharedStrings.xml', $sharedStrings.xml)))"/>
         <xsl:variable name="workbook.xml.rels" select="$files => soox:build-relationship-file('xl')"/>
         <xsl:variable name="workbook.xml" select="$elem => soox:workbook.xml( $workbook.xml.rels )"/>
@@ -207,10 +211,12 @@
     <xsl:function name="soox:worksheet.xml" visibility="private">
         <xsl:param name="simple_worksheet"/>
         <xsl:param name="shared-strings" as="xs:string*"/>
+        <xsl:param name="cell-styles-map" as="map(xs:string,xs:integer)"/>
         
         <xsl:variable name="content">
             <xsl:apply-templates select="$simple_worksheet" mode="soox:toOfficeOpenXml">
                 <xsl:with-param name="shared-strings" select="$shared-strings" tunnel="yes"/>
+                <xsl:with-param name="cell-styles-map" select="$cell-styles-map" tunnel="yes"/>
             </xsl:apply-templates>
         </xsl:variable>
         <xsl:sequence select="map{

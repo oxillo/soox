@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+    xmlns:xh="xspec-helpers"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:map="http://www.w3.org/2005/xpath-functions/map"
+    xmlns:soox="simplify-office-open-xml"
+    xmlns:my="my"
+    xmlns:oox="oox"
+    xmlns:s="soox"
+    xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    
+    xslt-version="3.0"
+    run-as="external"
+    stylesheet="../src/spreadsheet.xsl">
+    <x:variable name="x:saxon-config" href="../src/saxon-HE.config"/>
+    
+    <x:helper stylesheet="helpers/helpers.xsl" />
+    
+    
+           
+    <x:scenario label="Testing sheet styling">
+        <x:variable name="my:parts" select="xh:unzip(resolve-uri('../data/example.xlsx'))"/>
+        <x:variable name="oox:sheet3" select="$my:parts('/xl/worksheets/sheet3.xml')?content"/>
+        <x:call function="soox:decode-spreadsheet-part">
+            <x:param select="$my:parts"/>
+            <x:param select="'/xl/workbook.xml'"/>
+        </x:call>
+        <x:variable name="my:sheet-cell-format" select="$x:result/s:worksheet[@name='Cell Format']"/>
+        <x:variable name="oox:sheetFormatPr" select="$oox:sheet3/sml:worksheet/sml:sheetFormatPr"/>
+        <x:expect label="The sheet should have a 'style' element." test="count($my:sheet-cell-format/s:style) = count($oox:sheetFormatPr)"/>
+        <x:expect label="The 'style' element should have a single 'columns' element" test="count($my:sheet-cell-format/s:style/s:columns) = 1"/>
+        <x:expect label="The 'width' attribute of columns should match the defaultColumnWidth" test="$my:sheet-cell-format/s:style/s:columns/@width = $oox:sheetFormatPr/@defaultColWidth"/>
+        <x:expect label="The 'style' element should have a single 'rows' element" test="count($my:sheet-cell-format/s:style/s:columns) = 1"/>
+        <x:expect label="The 'height' attribute of rows should match the defaultRowHeight" test="$my:sheet-cell-format/s:style/s:rows/@height = $oox:sheetFormatPr/@defaultRowHeight"/>
+        
+        
+    </x:scenario>
+            
+            
+    
+</x:description>
