@@ -39,11 +39,6 @@
         <xsl:param name="parts" as="map(*)"/>
         <xsl:param name="uri"/>
         
-        <xsl:for-each select="map:keys($parts)">
-            <xsl:message select="current()"></xsl:message>
-        </xsl:for-each>
-        
-        
         <!-- Generate [Content-Types].xml from parts -->
         <xsl:variable name="package" select="map:merge(($parts,opc:generate-content-types($parts),opc:generate-package-relationships($parts)))"/>
         
@@ -185,7 +180,6 @@
                 <xsl:sequence select="distinct-values($parts(current())('content')//Relationship/@Target) ! concat($base,.)" xpath-default-namespace="http://schemas.openxmlformats.org/package/2006/relationships"/>
             </xsl:for-each>
         </xsl:variable>
-        <xsl:message select="string-join($relationship-targets,'||')"></xsl:message>
         
         <xsl:map>
             <xsl:map-entry key="'/_rels/.rels'">
