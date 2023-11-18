@@ -17,8 +17,6 @@
   </xd:doc>
   
   
-  <xsl:use-package name="soox:utils" version="1.0"/>
-  
   <xsl:include href="spreadsheet-helpers.xsl"/>
   
   
@@ -221,12 +219,14 @@
     <xsl:element name="c" _namespace="{$ns-sml}">
       <xsl:attribute name="r" select="soox:encode-cell-address(@col,@row)"/>
       <xsl:variable name="styleIndex" select="$cell-styles-map(soox:styleSignature(s:style))"/>
-      <xsl:attribute name="s">
-        <xsl:choose>
-          <xsl:when test="$is-date and $option-date-as-number">1</xsl:when>
-          <xsl:otherwise>0</xsl:otherwise>
-        </xsl:choose>
-      </xsl:attribute>
+      <xsl:choose>
+        <xsl:when test="s:style">
+          <xsl:attribute name="s" select="$styleIndex"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:attribute name="s">0</xsl:attribute>
+        </xsl:otherwise>
+      </xsl:choose>
       <!-- content type of cell: 'b' for boolean, 'd' for date in ISO 8601, 'e' for error, 
            'inlineStr' for rich Text string, 's' for shared string, 'n' for number, 'str' for formula string 
            cf § 18.18.11 ST_CellType (Cell Type) -->

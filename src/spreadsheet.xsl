@@ -22,6 +22,8 @@
         </xd:desc>
     </xd:doc>
 
+    <xsl:use-package name="soox:utils" version="1.0"/>
+    
     <xsl:include href="spreadsheet-styles.xsl"/>
     <xsl:include href="spreadsheet-templates.xsl"/>
     

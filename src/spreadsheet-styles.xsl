@@ -20,6 +20,7 @@
     </xd:desc>
   </xd:doc>
   
+  <xsl:include href="utils_colors.xsl"/>
   
   <xd:doc>
     <xd:desc>
@@ -61,10 +62,16 @@
           </font>
         </fonts>
         
-        <xsl:variable name="fillsTable" as="element(sml:fill)*"
-          select="soox:computeStyleFillsTable($cellStyles)"/>
-        <fills count="{count($fillsTable)}">
-          <xsl:sequence select="$fillsTable"/>
+        <xsl:variable name="fillsTablemap" as="map(xs:string,element(sml:fill))"
+          select="soox:buildFillStyleMap($cellStyles)"/>
+        <fills count="{1 + count(map:keys($fillsTablemap))}">
+          <fill>
+            <patternFill patternType="none"/>
+          </fill>
+          
+          <xsl:for-each select="map:keys($fillsTablemap)">
+            <xsl:sequence select="$fillsTablemap(current())"/>
+          </xsl:for-each>
         </fills>
         
         <xsl:variable name="bordersTable" as="element(sml:border)*"
@@ -193,10 +200,37 @@
     <xd:return>a signature string</xd:return>
   </xd:doc>
   <xsl:function name="soox:styleSignature" as="xs:string">
-    <xsl:param name="style" as="element(s:style)"/>
+    <xsl:param name="style" as="element(s:style)?"/>
     
-    <xsl:sequence select="'fill:'||$style/s:fill/@bg"/>
+    <xsl:sequence select="'fill:'||soox:fillSignature($style)"/>
   </xsl:function>
+  
+  <xd:doc>
+    <xd:desc>
+      <xd:p>Generate the signature string for the cell fill style</xd:p>
+    </xd:desc>
+    <xd:param name="style">the cell ctyle</xd:param>
+    <xd:return>a string </xd:return>
+  </xd:doc>
+  <xsl:function name="soox:fillSignature" as="xs:string">
+    <xsl:param name="style" as="element(s:style)?"/>
+    
+    <!--xsl:choose>
+      <xsl:when test="empty($style)">
+        <xsl:sequence select="'none'"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:variable name="color" select="soox:parseColor($style/fill/@bg)"/>
+        <xsl:value-of select="'solid('||$color||')'"/></xsl:otherwise>
+    </xsl:choose-->
+    
+      <xsl:sequence select="if ($style) then 'solid('||soox:parseColor($style/@fill-color)||')' else 'none'"/>
+  </xsl:function>
+  
+  
+  
+  
+  
   
   <xd:doc>
     <xd:desc>
@@ -228,10 +262,7 @@
     <fill>
       <patternFill patternType="none"/>
     </fill>
-    <fill>
-      <patternFill patternType="gray125"/>
-    </fill>
-    <xsl:for-each select="distinct-values($styles/s:fill/@bg)">
+    <xsl:for-each select="($styles/@fill-color!soox:parseColor(.)) => distinct-values()">
       <fill>
         <patternFill patternType="solid">
           <fgColor rgb="{current()}"/>
@@ -249,23 +280,67 @@
     <xd:param name="cellFillStyle">The sequence of styles defined in the workbook</xd:param>
     <xd:return>A sequence of fill elements</xd:return>
   </xd:doc>
-  <xsl:function name="soox:getFillStyleIndex" as="xs:integer?">
+  <xsl:function name="soox:getFillStyleIndexOld" as="xs:integer?">
     <xsl:param name="fillsTable" as="element(sml:fill)*"/>
-    <xsl:param name="cellFillStyle" as="element(s:fill)"/>
+    <xsl:param name="cellFillStyle" as="element(s:style)"/>
     
     <!-- Determine the fill index by getting the position in the fill table-->
     <xsl:for-each select="$fillsTable">
-      <xsl:if test="current()/descendant::sml:bgColor/@rgb=data($cellFillStyle/@bg)">
-        <xsl:sequence select="position()" />
+      <xsl:if test="current()/descendant::sml:bgColor/@rgb=data($cellFillStyle/@fill-color)">
+        <xsl:sequence select="position()-1" /> <!-- Index starts 0 -->
       </xsl:if>
     </xsl:for-each>
   </xsl:function>
   
+  <xsl:function name="soox:buildFillStyleMap" as="map(xs:string,element(sml:fill))">
+    <xsl:param name="styles" as="element(s:style)*"/>
+    
+    <xsl:map>
+      <!-- first entry of the map is always the no-fill item --> 
+      <!--xsl:map-entry key="'none'">
+        <fill>
+          <patternFill patternType="none"/>
+        </fill>
+      </xsl:map-entry-->
+      <!-- get the remaining fill items from their unique signature -->
+      <xsl:for-each-group select="$styles" group-by="soox:fillSignature(.)">
+        <xsl:sort order="ascending"/>
+        
+        <xsl:if test="current-grouping-key() ne 'none'">
+          <xsl:map-entry key="current-grouping-key()">
+            <xsl:variable name="color" select="soox:parseColor(current-group()[1]/@fill-color)"/>
+            <fill>
+              <patternFill patternType="solid">
+                <fgColor rgb="{$color}"/>
+                <bgColor rgb="{$color}"/>
+              </patternFill>
+            </fill>
+          </xsl:map-entry>
+        </xsl:if>
+      </xsl:for-each-group>
+    </xsl:map>
+  </xsl:function>
+  
+  <xsl:function name="soox:getFillStyleIndex" as="xs:integer">
+    <xsl:param name="signature" as="xs:string"/>
+    <xsl:param name="styles" as="map(xs:string,element(sml:fill))"/>
+      
+    <xsl:variable name="matching" as="xs:integer*"
+      select="map:keys($styles)=>index-of($signature)"/>
+    <xsl:sequence select="if($matching) then $matching[1] else 0"/>
+  </xsl:function>
+  
+  <xd:doc>
+    <xd:desc>
+      <xd:p>Generate a map between the style signature and its index</xd:p>
+    </xd:desc>
+    <xd:param name="styles"></xd:param>
+    <xd:return></xd:return>
+  </xd:doc>
   <xsl:function name="soox:buildCellStylesMap" as="map(xs:string,xs:integer)">
     <xsl:param name="styles" as="element(s:style)*"/>
     
     <xsl:map>
-      
       <xsl:for-each-group select="$styles" group-by="soox:styleSignature(.)">
         <xsl:sort order="ascending"/>
         <xsl:map-entry key="current-grouping-key()" select="position()"/>
@@ -321,12 +396,12 @@
         indent="0" shrinkToFit="false"/>
       <protection locked="true" hidden="false"/>
     </xf>
-    <xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="true"
+    <!--xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="true"
       applyBorder="false" applyAlignment="false" applyProtection="false">
       <alignment horizontal="general" vertical="bottom" textRotation="0" wrapText="false"
         indent="0" shrinkToFit="false"/>
       <protection locked="true" hidden="false"/>
-    </xf>
+    </xf-->
     <xsl:variable name="fillsTable" as="element(sml:fill)*" 
       select="$styles=>soox:computeStyleFillsTable()"/>
     <xsl:for-each-group select="$styles" group-by="soox:styleSignature(.)">
@@ -335,7 +410,7 @@
       <xf>
         <xsl:attribute name="numFmtId" select="(164)[1]"/>
         <xsl:attribute name="fontId" select="(0)[1]"/>
-        <xsl:attribute name="fillId" select="(soox:getFillStyleIndex($fillsTable,$style/s:fill),0)[1]"/>
+        <xsl:attribute name="fillId" select="soox:fillSignature($style)=>soox:getFillStyleIndex(soox:buildFillStyleMap($styles))"/>
         <xsl:attribute name="borderId" select="(0)[1]"/>
         <xsl:attribute name="xfId" select="(0)[1]"/>
         <xsl:attribute name="applyFont" select="'true'"/>
@@ -348,4 +423,6 @@
       </xf>
     </xsl:for-each-group>
   </xsl:function>
+  
+  
 </xsl:stylesheet>
