@@ -20,7 +20,8 @@
     </xd:desc>
   </xd:doc>
   
-  <xsl:include href="utils_colors.xsl"/>
+  <xsl:include href="utils_fonts.xsl"/>
+  <xsl:include href="utils_borders.xsl"/>
   
   <xd:doc>
     <xd:desc>
@@ -37,29 +38,15 @@
         <numFmts xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1">
           <numFmt numFmtId="164" formatCode="General"/>
         </numFmts>
-        <fonts xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="4">
-          <font>
-            <sz val="11"/>
-            <color rgb="FF000000"/>
-            <name val="Calibri"/>
-            <family val="2"/>
-            <charset val="238"/>
-          </font>
-          <font>
-            <sz val="10"/>
-            <name val="Arial"/>
-            <family val="0"/>
-          </font>
-          <font>
-            <sz val="10"/>
-            <name val="Arial"/>
-            <family val="0"/>
-          </font>
-          <font>
-            <sz val="10"/>
-            <name val="Arial"/>
-            <family val="0"/>
-          </font>
+        
+        <xsl:variable name="fontsTablemap" as="map(xs:string,element(sml:font))"
+          select="soox:buildFontStyleMap($cellStyles)"/>
+        <fonts count="{count(map:keys($fontsTablemap))}">
+          <xsl:variable name="default-font-signature" select="$default-font=>soox:fontSignature()"/>
+          <xsl:sequence select="$fontsTablemap($default-font-signature)"/>
+          <xsl:for-each select="map:keys($fontsTablemap)[. ne $default-font-signature]">
+            <xsl:sequence select="$fontsTablemap(current())"/>
+          </xsl:for-each>
         </fonts>
         
         <xsl:variable name="fillsTablemap" as="map(xs:string,element(sml:fill))"
@@ -74,10 +61,14 @@
           </xsl:for-each>
         </fills>
         
-        <xsl:variable name="bordersTable" as="element(sml:border)*"
-          select="soox:computeStyleBordersTable($cellStyles)"/>
-        <borders count="{count($bordersTable)}">
-          <xsl:sequence select="$bordersTable"/>
+        <xsl:variable name="bordersTablemap" as="map(xs:string,element(sml:border))"
+          select="soox:buildBorderStyleMap($cellStyles)"/>
+        <borders count="{1 + count(map:keys($bordersTablemap))}">
+          <xsl:variable name="default-border-signature" select="$default-border=>soox:border-signature()"/>
+          <xsl:sequence select="$bordersTablemap($default-border-signature)"/>
+          <xsl:for-each select="map:keys($bordersTablemap)[. ne $default-border-signature]">
+            <xsl:sequence select="$bordersTablemap(current())"/>
+          </xsl:for-each>
         </borders>
         
         <cellStyleXfs xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="20">
@@ -129,7 +120,13 @@
         
         <xsl:variable name="cellStylesTable" as="element(sml:xf)*"
           select="soox:computeStyleCellXfsTable($cellStyles)"/>
-        <cellXfs xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="{$cellStylesTable=>count()}">
+        <cellXfs count="{1 + $cellStylesTable=>count()}">
+          <xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="false"
+            applyBorder="false" applyAlignment="false" applyProtection="false">
+            <alignment horizontal="general" vertical="bottom" textRotation="0" wrapText="false"
+              indent="0" shrinkToFit="false"/>
+            <protection locked="true" hidden="false"/>
+          </xf>
           <xsl:sequence select="$cellStylesTable"/> 
         </cellXfs>
         
@@ -202,9 +199,11 @@
   <xsl:function name="soox:styleSignature" as="xs:string">
     <xsl:param name="style" as="element(s:style)?"/>
     
-    
-    
-    <xsl:sequence select="map{'fill':soox:fillSignature($style)}=>serialize(map{'method':'adaptive'})"/>
+    <xsl:sequence select="map{
+      'font':soox:fontSignature($style),
+      'fill':soox:fillSignature($style),
+      'border':soox:border-signature($style)
+      }=>serialize(map{'method':'adaptive'})"/>
   </xsl:function>
   
   
@@ -233,6 +232,8 @@
   </xsl:function>
   
   
+  
+  
   <!-- ============================================================================-->
   <!-- =================      Cell Fill style      ================================-->
   <!-- ============================================================================-->
@@ -247,7 +248,7 @@
   <xsl:function name="soox:fillSignature" as="xs:string">
     <xsl:param name="style" as="element(s:style)?"/>
     
-    <xsl:sequence select="if ($style) then 'solid('||soox:parseColor($style/@fill-color)||')' else 'none'"/>
+    <xsl:sequence select="if ($style/@fill-color) then 'solid('||soox:parseColor($style/@fill-color)||')' else 'none'"/>
   </xsl:function>
   
   
@@ -302,75 +303,6 @@
   </xsl:function>
   
   
-  <!-- ============================================================================-->
-  <!-- =================      Cell Border style      ==============================-->
-  <!-- ============================================================================-->
-  
-  <xd:doc>
-    <xd:desc>
-      <xd:p>Generate the signature string for the cell border style</xd:p>
-    </xd:desc>
-    <xd:param name="style">the cell style</xd:param>
-    <xd:return>a string that uniquely identifies the border style</xd:return>
-  </xd:doc>
-  <xsl:function name="soox:borderSignature" as="xs:string">
-    <xsl:param name="style" as="element(s:style)?"/>
-    
-    <xsl:sequence select="if ($style) then 'none' else 'none'"/>
-  </xsl:function>
-  
-  
-  <xd:doc>
-    <xd:desc>
-      <xd:p>Build a map to associates the fill signature to the generated OOXML border element</xd:p>
-      <xd:p>The map does not contains the 'none' fill style</xd:p>
-    </xd:desc>
-    <xd:param name="styles">SOOX cell styles</xd:param>
-    <xd:return>A map that associates the fill signature with the generated OOXML border element</xd:return>
-  </xd:doc>
-  <xsl:function name="soox:buildBorderStyleMap" as="map(xs:string,element(sml:border))">
-    <xsl:param name="styles" as="element(s:style)*"/>
-    
-    <xsl:map>
-      <!-- get the border items from their unique signature -->
-      <xsl:for-each-group select="$styles" group-by="soox:borderSignature(.)">
-        <xsl:sort order="ascending"/>
-        
-        <xsl:if test="current-grouping-key() ne 'none'">
-          <xsl:map-entry key="current-grouping-key()">
-            <!-- TODO -->
-            <border diagonalUp="false" diagonalDown="false">
-              <left/>
-              <right/>
-              <top/>
-              <bottom/>
-              <diagonal/>
-            </border>
-          </xsl:map-entry>
-        </xsl:if>
-      </xsl:for-each-group>
-    </xsl:map>
-  </xsl:function>
-  
-  
-  <xd:doc>
-    <xd:desc>
-      <xd:p>Returns the OOXML border style index from a border style signature</xd:p>
-      <xd:p>The returned index is the position of the signature in the keys of the border styles map</xd:p>
-    </xd:desc>
-    <xd:param name="signature">The border style signature to find</xd:param>
-    <xd:param name="styles">A border styles map that associate a signature to a OOXML border element</xd:param>
-    <xd:return>The index of the matching signature or 0(=no fill) if not found</xd:return>
-  </xd:doc>
-  <xsl:function name="soox:getBorderStyleIndex" as="xs:integer">
-    <xsl:param name="signature" as="xs:string"/>
-    <xsl:param name="styles" as="map(xs:string,element(sml:border))"/>
-    
-    <xsl:variable name="matching" as="xs:integer*"
-      select="trace(map:keys($styles))=>index-of($signature)"/>
-    <xsl:sequence select="if($matching) then $matching[1] else 0"/>
-  </xsl:function>
-  
   
   <xd:doc>
     <xd:desc>
@@ -393,33 +325,6 @@
  
   
   
-  <xd:doc>
-    <xd:desc>
-      <xd:p>Compute the table of unique border styles</xd:p>
-    </xd:desc>
-    <xd:param name="styles">The sequence of styles defined in the workbook</xd:param>
-    <xd:return>A sequence of border elements</xd:return>
-  </xd:doc>
-  <xsl:function name="soox:computeStyleBordersTable" visibility="private" as="element(sml:border)*">
-    <xsl:param name="styles" as="element(s:style)*"/>
-    
-    <border diagonalUp="false" diagonalDown="false">
-      <left/>
-      <right/>
-      <top/>
-      <bottom/>
-      <diagonal/>
-    </border>
-    <!--xsl:for-each select="distinct-values($styles/s:fill/@bg)">
-      <border diagonalUp="false" diagonalDown="false">
-        <left/>
-        <right/>
-        <top/>
-        <bottom/>
-        <diagonal/>
-      </border>
-    </xsl:for-each-->
-  </xsl:function>
   
   
   <xd:doc>
@@ -432,13 +337,13 @@
   <xsl:function name="soox:computeStyleCellXfsTable" as="element(sml:xf)*">
     <xsl:param name="styles" as="element(s:style)*"/>
   
-    <xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="false"
+    <!--xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="false"
       applyBorder="false" applyAlignment="false" applyProtection="false">
       <alignment horizontal="general" vertical="bottom" textRotation="0" wrapText="false"
         indent="0" shrinkToFit="false"/>
       <protection locked="true" hidden="false"/>
     </xf>
-    <!--xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="true"
+    <xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="true"
       applyBorder="false" applyAlignment="false" applyProtection="false">
       <alignment horizontal="general" vertical="bottom" textRotation="0" wrapText="false"
         indent="0" shrinkToFit="false"/>
@@ -449,9 +354,9 @@
       
       <xf>
         <xsl:attribute name="numFmtId" select="(164)[1]"/>
-        <xsl:attribute name="fontId" select="(0)[1]"/>
+        <xsl:attribute name="fontId" select="soox:buildFontStyleMap($styles)=>soox:font-index-of(soox:fontSignature($style))"/>
         <xsl:attribute name="fillId" select="soox:fillSignature($style)=>soox:getFillStyleIndex(soox:buildFillStyleMap($styles))"/>
-        <xsl:attribute name="borderId" select="(0)[1]"/>
+        <xsl:attribute name="borderId" select="soox:buildBorderStyleMap($styles)=>soox:border-index-of(soox:border-signature($style))"/>
         <xsl:attribute name="xfId" select="(0)[1]"/>
         <xsl:attribute name="applyFont" select="'true'"/>
         <xsl:attribute name="applyBorder" select="'false'"/>
