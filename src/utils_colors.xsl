@@ -35,7 +35,7 @@
         <xd:param name="default">a string representing a ARGB color that is used in case of parsing error.</xd:param>
         <xd:return>a string that is the hexadecimal ARGB value.(eg. FF123456)</xd:return>
     </xd:doc>
-    <xsl:function name="soox:parseColor" as="xs:string">
+    <xsl:function name="soox:parse-color" as="xs:string">
         <xsl:param name="str" as="xs:string"/>
         <xsl:param name="default" as="xs:string"/>
         
@@ -66,7 +66,7 @@
                 <xsl:sequence select="concat($a,$r,$g,$b)"/>    
             </xsl:when>
             <!-- Hex RGBA (shortened)-->
-            <xsl:when test="matches($color,'^#([A-Fa-f0-9]{3})$')">
+            <xsl:when test="matches($color,'^#([A-Fa-f0-9]{4})$')">
                 <xsl:variable name="r" select="substring($color,2,1)=>upper-case()"/>
                 <xsl:variable name="g" select="substring($color,3,1)=>upper-case()"/>
                 <xsl:variable name="b" select="substring($color,4,1)=>upper-case()"/>
@@ -111,10 +111,10 @@
         <xd:param name="str">a string</xd:param>
         <xd:return>a string that is the hexadecimal ARGB value.(eg. FF123456)</xd:return>
     </xd:doc>
-    <xsl:function name="soox:parseColor" as="xs:string">
+    <xsl:function name="soox:parse-color" as="xs:string">
         <xsl:param name="str" as="xs:string"/>
         
-        <xsl:sequence select="soox:parseColor($str,'FF000000')"/>
+        <xsl:sequence select="soox:parse-color($str,'FF000000')"/>
     </xsl:function>
     
     <xd:doc>

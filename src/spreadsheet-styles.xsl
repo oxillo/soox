@@ -248,7 +248,7 @@
   <xsl:function name="soox:fillSignature" as="xs:string">
     <xsl:param name="style" as="element(s:style)?"/>
     
-    <xsl:sequence select="if ($style/@fill-color) then 'solid('||soox:parseColor($style/@fill-color)||')' else 'none'"/>
+    <xsl:sequence select="if ($style/@fill-color) then 'solid('||soox:parse-color($style/@fill-color)||')' else 'none'"/>
   </xsl:function>
   
   
@@ -270,7 +270,7 @@
         
         <xsl:if test="current-grouping-key() ne 'none'">
           <xsl:map-entry key="current-grouping-key()">
-            <xsl:variable name="color" select="soox:parseColor(current-group()[1]/@fill-color)"/>
+            <xsl:variable name="color" select="soox:parse-color(current-group()[1]/@fill-color)"/>
             <fill>
               <patternFill patternType="solid">
                 <fgColor rgb="{$color}"/>
