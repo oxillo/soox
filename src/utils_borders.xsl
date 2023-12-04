@@ -164,6 +164,15 @@
         <xsl:sequence select="($from-border-detailed,$from-border-leftrighttopbottom,$from-border-color,$from-border-style,$from-border)=>soox:cascade-border-style()"/>
     </xsl:function>
     
+    
+    <xd:doc>
+        <xd:desc>
+            <xd:p>Generate a single 'style' element with cascaded border styles</xd:p>
+            <xd:p>It goes over all border attributes and retain the first defined one from the styles sequence</xd:p>
+        </xd:desc>
+        <xd:param name="styles">A sequence of style elements. The first one is the most important</xd:param>
+        <xd:return>A style element with effective border attributes</xd:return>
+    </xd:doc>
     <xsl:function name="soox:cascade-border-style" as="element(s:style)">
         <xsl:param name="styles" as="element(s:style)+"/>
         
