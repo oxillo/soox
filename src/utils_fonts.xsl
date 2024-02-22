@@ -105,6 +105,9 @@
     <xsl:function name="soox:get-font-style" as="xs:string">
         <xsl:param name="style" as="element(s:style)?"/>
         
+        <xsl:if test="not(index-of(('normal','italic',''),$style/@font-style||''))">
+            <xsl:message expand-text="true">Invalid font style specification &quot;{$style/@font-style}&quot;</xsl:message>
+        </xsl:if>
         <xsl:sequence select="($style/@font-style,soox:font-from-short-attribute($style)/@font-style,$default-font/@font-style)[1]"/>
     </xsl:function>
     
@@ -116,7 +119,7 @@
         <xd:param name="style">the cell style</xd:param>
         <xd:return>a string that uniquely identifies the font style</xd:return>
     </xd:doc>
-    <xsl:function name="soox:fontSignature" as="xs:string">
+    <xsl:function name="soox:font-signature" as="xs:string">
         <xsl:param name="style" as="element(s:style)?"/>
         
         <xsl:sequence select="if ($style) then 
@@ -126,7 +129,7 @@
                 'weight':soox:get-font-weight($style),
                 'style':soox:get-font-style($style)
                 }=>serialize(map{'method':'adaptive'}) 
-            else $default-font=>soox:fontSignature()"/>
+            else $default-font-signature"/>
     </xsl:function>
     
     
@@ -142,7 +145,7 @@
         <xsl:param name="styles" as="element(s:style)*"/>
         
         <xsl:map>
-            <xsl:for-each-group select="($default-font,$styles)" group-by="soox:fontSignature(.)">
+            <xsl:for-each-group select="($default-font,$styles)" group-by="soox:font-signature(.)">
                 <xsl:map-entry key="current-grouping-key()">
                     <xsl:variable name="font-style" select="current-group()[1]"/>
                     <sml:font>
@@ -154,9 +157,12 @@
                         <xsl:if test="soox:get-font-weight($font-style) = 'bold'">
                             <sml:b/>
                         </xsl:if>
-                        <xsl:if test="soox:get-font-style($font-style) = 'italic'">
-                            <sml:i/>
-                        </xsl:if>
+                        <xsl:choose>
+                            <xsl:when test="soox:get-font-style($font-style) = 'italic'">
+                                <sml:i/>
+                            </xsl:when>
+                            <xsl:otherwise/>
+                        </xsl:choose>
                     </sml:font>
                 </xsl:map-entry>
             </xsl:for-each-group>
@@ -178,8 +184,32 @@
         <xsl:param name="signature" as="xs:string"/>
         
         <xsl:variable name="matching" as="xs:integer*"
-            select="(map:keys($styles)[. ne $default-font=>soox:fontSignature()])=>index-of($signature)"/>
+            select="(map:keys($styles)[. ne $default-font-signature])=>index-of($signature)"/>
         <xsl:sequence select="if($matching) then $matching[1] else 0"/>
+    </xsl:function>
+    
+    <xd:doc>
+        <xd:desc>
+            <xd:p>Generates a table for all unique font styles</xd:p>
+        </xd:desc>
+        <xd:param name="cellStyles">a sequence of all cell styles</xd:param>
+        <xd:return>a font table inside a fonts element</xd:return>
+    </xd:doc>
+    <xsl:function name="soox:fonts-table" as="element(sml:fonts)">
+        <xsl:param name="cellStyles" as="element(s:style)*"/>
+        
+        <!-- Generates a map {"font-signature": sml:font element} -->
+        <xsl:variable name="fontsTablemap" as="map(xs:string,element(sml:font))"
+            select="soox:buildFontStyleMap($cellStyles)"/>
+        
+        <!-- Generates a fonts element containing font elements; first element should be the default one -->
+        <sml:fonts count="{count(map:keys($fontsTablemap))}">
+            
+            <xsl:sequence select="$fontsTablemap($default-font-signature)"/>
+            <xsl:for-each select="map:keys($fontsTablemap)[. ne $default-font-signature]">
+                <xsl:sequence select="$fontsTablemap(current())"/>
+            </xsl:for-each>
+        </sml:fonts>
     </xsl:function>
     
     <xd:doc>
@@ -190,5 +220,13 @@
     <xsl:variable name="default-font" as="element(s:style)">
         <s:style font-family="Arial" font-size="12" font-weight="normal" font-style="normal"/>
     </xsl:variable>
+    
+    <xd:doc>
+        <xd:desc>
+            <xd:p>The default font signature</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:variable name="default-font-signature" as="xs:string"
+        select="$default-font=>soox:font-signature()"/>
     
 </xsl:stylesheet>

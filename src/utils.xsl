@@ -15,10 +15,16 @@
     exclude-result-prefixes="#all">
     
     
+    
     <xsl:output name="standalone" method="xml" standalone="yes" indent="yes"/>
     
     <xsl:variable name="sooxns:sml" select="'http://schemas.openxmlformats.org/spreadsheetml/2006/main'" visibility="final"/>
     <xsl:variable name="sooxns:rels" select="'http://schemas.openxmlformats.org/package/2006/relationships'" visibility="final"/>
+    
+    <!--xsl:include href="utils_colors.xsl"/-->
+    <!--xsl:expose component="function" names="soox:parseColor#1 soox:parseColor#2" visibility="public"/-->
+    
+    
     
     
     

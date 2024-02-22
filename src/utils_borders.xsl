@@ -392,6 +392,31 @@
     
     <xd:doc>
         <xd:desc>
+            <xd:p>Generates a table for all unique border styles</xd:p>
+        </xd:desc>
+        <xd:param name="cellStyles">a sequence of all the cell styles</xd:param>
+        <xd:return>a border table inside a borders element</xd:return>
+    </xd:doc>
+    <xsl:function name="soox:borders-table" as="element(sml:borders)">
+        <xsl:param name="cellStyles" as="element(s:style)*"/>
+        
+        <!-- Generates a map {"border-signature": sml:border element} --> 
+        <xsl:variable name="bordersTablemap" as="map(xs:string,element(sml:border))"
+            select="soox:buildBorderStyleMap($cellStyles)"/>
+        
+        <!-- Generates a borders element containing border elements; first element should be the default one -->
+        <sml:borders count="{1 + count(map:keys($bordersTablemap))}">
+            
+            <xsl:variable name="default-border-signature" select="$default-border=>soox:border-signature()"/>
+            <xsl:sequence select="$bordersTablemap($default-border-signature)"/>
+            <xsl:for-each select="map:keys($bordersTablemap)[. ne $default-border-signature]">
+                <xsl:sequence select="$bordersTablemap(current())"/>
+            </xsl:for-each>
+        </sml:borders>
+    </xsl:function>
+    
+    <xd:doc>
+        <xd:desc>
             <xd:p>The default font specification</xd:p>
         </xd:desc>
     </xd:doc>
