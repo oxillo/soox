@@ -1,0 +1,8 @@
+@ECHO OFF
+set SCRIPT_DIR=%~dp0
+set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
+
+set XSPEC_HOME=%SCRIPT_DIR%\xspec-2.3.2
+set SAXON_HOME=%SCRIPT_DIR%\..\SaxonHE12-4J
+
+"%XSPEC_HOME%\bin\xspec.bat" %*
