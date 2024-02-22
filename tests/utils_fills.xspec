@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+    xmlns:s="soox"
+    xmlns:soox="simplify-office-open-xml"
+    xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    xslt-version="3.0"
+    run-as="import"
+    stylesheet="../src/utils_fills.xsl">
+    
+    <!--x:variable name="x:saxon-config" href="saxon-HE.config"/-->
+    
+    <x:helper stylesheet="../src/utils_colors.xsl"/>
+    
+    <x:scenario label="Unit testing of soox:fills-table">
+        <x:scenario label="When no style is given">
+           <x:call function="soox:fills-table">
+               <x:param select="()"/>
+           </x:call>
+           <x:expect label="it should return a table only containing the 'no-fill' element">
+               <sml:fills count="1">
+                   <sml:fill>
+                       <sml:patternFill patternType="none"/>
+                   </sml:fill>
+               </sml:fills>
+           </x:expect>
+        </x:scenario>
+        <x:scenario label="When multiple style are given,">
+            <x:call function="soox:fills-table">
+                <x:param>
+                    <s:style />
+                    <s:style fill-color="red"/>
+                    <s:style fill-color="black"/>
+                    <s:style fill-color="#FF0000"/>
+                    <s:style fill="solid green"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should return a table containing deduplicated elements">
+                <sml:fills count="4">
+                    <sml:fill>
+                        <sml:patternFill patternType="none"/>
+                    </sml:fill>
+                    <sml:fill>
+                        <sml:patternFill patternType="solid">
+                            <sml:fgColor rgb="FF008000"/>
+                            <sml:bgColor rgb="FF008000"/>
+                        </sml:patternFill>
+                    </sml:fill>
+                    <sml:fill>
+                        <sml:patternFill patternType="solid">
+                            <sml:fgColor rgb="FFFF0000"/>
+                            <sml:bgColor rgb="FFFF0000"/>
+                        </sml:patternFill>
+                    </sml:fill>
+                    <sml:fill>
+                        <sml:patternFill patternType="solid">
+                            <sml:fgColor rgb="FF000000"/>
+                            <sml:bgColor rgb="FF000000"/>
+                        </sml:patternFill>
+                    </sml:fill>
+                </sml:fills>
+            </x:expect>
+        </x:scenario>
+    </x:scenario>
+    
+    <x:scenario label="Unit testing of soox:fill-signature">
+        <x:scenario label="When no style is given">
+            <x:call function="soox:fill-signature">
+                <x:param select="()"/>
+            </x:call>
+            <x:expect label="it should return the 'none' signature string" select="'none'"/>
+        </x:scenario>
+        <x:scenario label="When an empty style is given">
+            <x:call function="soox:fill-signature">
+                <x:param>
+                    <s:style/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should return the 'none' signature string" select="'none'"/>
+        </x:scenario>
+        <x:scenario label="When a style is given with only a fill-color attribute">
+            <x:call function="soox:fill-signature">
+                <x:param>
+                    <s:style fill-color="green"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should return the 'solid#FF008000' signature string" select="'solid#FF008000'"/>
+        </x:scenario>
+        <x:scenario label="When a style is given with fill-style and fill-color attribute">
+            <x:call function="soox:fill-signature">
+                <x:param>
+                    <s:style fill-style="solid" fill-color="#123456"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should return the 'solid#FF123456' signature string" select="'solid#FF123456'"/>
+        </x:scenario>
+        <x:scenario label="When a style is given with only a fill attribute">
+            <x:call function="soox:fill-signature">
+                <x:param>
+                    <s:style fill="solid #00F"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should return the 'solid#FF0000FF' signature string" select="'solid#FF0000FF'"/>
+        </x:scenario>
+    </x:scenario>
+    
+    <x:scenario label="Unittesting of soox:fill-index-of">
+        <x:variable name="styles">
+            <s:style />
+            <s:style fill-color="red"/>
+            <s:style fill-color="black"/>
+            <s:style fill-color="#FF0000"/>
+            <s:style fill="solid green"/>
+        </x:variable>
+        <x:variable name="fill-map" select="soox:buildFillStyleMap($styles)"/>
+        <x:scenario label="When looking for 'none' signature,">
+            <x:call function="soox:fill-index-of">
+                <x:param select="$fill-map"/>
+                <x:param select="'none'"/>
+            </x:call>
+            <x:expect label="it should return 0" select="0"/>
+        </x:scenario>
+        <x:scenario label="When looking for 'solid#FF008000' signature,">
+            <x:call function="soox:fill-index-of">
+                <x:param select="$fill-map"/>
+                <x:param select="'solid#FF008000'"/>
+            </x:call>
+            <x:expect label="it should return 1" select="1"/>
+        </x:scenario>
+        <x:scenario label="When looking for 'solid#FFFF0000' signature,">
+            <x:call function="soox:fill-index-of">
+                <x:param select="$fill-map"/>
+                <x:param select="'solid#FFFF0000'"/>
+            </x:call>
+            <x:expect label="it should return 2" select="2"/>
+        </x:scenario>
+        <x:scenario label="When looking for 'solid#FFFFFFFF' unknown signature,">
+            <x:call function="soox:fill-index-of">
+                <x:param select="$fill-map"/>
+                <x:param select="'solid#FFFFFFFF'"/>
+            </x:call>
+            <x:expect label="it should return 0 (the default fill)" select="0"/>
+        </x:scenario>
+    </x:scenario>
+</x:description>
