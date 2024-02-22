@@ -55,6 +55,10 @@
             <cell col="2" row="3">
                 <v>2.53</v>
             </cell>
+            <cell col="3" row="3">
+                <style numeric-format="0.0%"/>
+                <v>0.5324</v>
+            </cell>
         </data>
     </worksheet>
     <worksheet name="Sheet styling">
@@ -355,7 +359,7 @@
             
             
             <cell col="1" row="5">
-                <v>Changing border color</v>
+                <v>Changing border color (BOTTOM)</v>
             </cell>
             <cell col="2" row="5">
                 <v>Default</v>
