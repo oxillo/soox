@@ -11,3 +11,6 @@
 
 # ignore local test data
 /data
+
+/examples/generated-OfficeOpenXml-workbook.xlsx
+/examples/result.xml

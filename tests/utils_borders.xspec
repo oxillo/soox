@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+    xmlns:s="soox"
+    xmlns:soox="simplify-office-open-xml"
+    xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    xslt-version="3.0"
+    run-as="import"
+    stylesheet="../src/utils_borders.xsl">
+    
+    <!--x:variable name="x:saxon-config" href="saxon-HE.config"/-->
+    
+    <x:helper stylesheet="../src/utils_colors.xsl"/>
+    
+    <x:scenario label="Unit testing of soox:cascade-border-style">
+        <x:scenario label="When the argument is a hexadecimal color #ABCDEF,">
+           <x:call function="soox:cascade-border-style">
+               <x:param>
+                   <s:style border-left-style="thick" border-right-color="green"/>
+                   <s:style border-left-style="hair" border-left-color="red"/>
+               </x:param>
+           </x:call>
+           <x:expect label="it should return a string in the form of FFRRGGBB (FFABCDEF)">
+               <s:style border-left-style="thick" border-right-style="none" border-top-style="none" border-bottom-style="none"
+                   border-left-color="red" border-right-color="green" border-top-color="black" border-bottom-color="black"/>
+           </x:expect>
+        </x:scenario>
+    </x:scenario>
+    
+    <x:scenario label="Unit testing of soox:expand-border-attributes">
+        <x:scenario label="When no border attribute is used,">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should return a style with default values (none, black)">
+                <s:style border-left-style="none" border-right-style="none" border-top-style="none" border-bottom-style="none"
+                    border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border attribute as a single argument,">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border="thick"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should be the style of the 4 borders, the color is the default one(black)">
+                <s:style border-left-style="thick" border-right-style="thick" border-top-style="thick" border-bottom-style="thick"
+                    border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border attribute as 2 elements,">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border="hair red"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should be the style and the color of the 4 borders">
+                <s:style border-left-style="hair" border-right-style="hair" border-top-style="hair" border-bottom-style="hair"
+                    border-left-color="red" border-right-color="red" border-top-color="red" border-bottom-color="red"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border attribute as an invalid style element,">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border="solid green"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should be the default style (none) and the color of the 4 borders">
+                <s:style border-left-style="none" border-right-style="none" border-top-style="none" border-bottom-style="none"
+                    border-left-color="green" border-right-color="green" border-top-color="green" border-bottom-color="green"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border attribute as an invalid color element,">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border="dotted greener"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should be the default style (none) and the color of the 4 borders">
+                <s:style border-left-style="dotted" border-right-style="dotted" border-top-style="dotted" border-bottom-style="dotted"
+                    border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border-style attribute is used with a single element,">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border-style="dotted"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should be the style of the 4 borders">
+                <s:style border-left-style="dotted" border-right-style="dotted" border-top-style="dotted" border-bottom-style="dotted"
+                    border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border-style attribute is used with 2 elements,">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border-style="dashed dotted"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should be the style of the horizontal (top bttom) and vertical (left right)">
+                <s:style border-left-style="dotted" border-right-style="dotted" border-top-style="dashed" border-bottom-style="dashed"
+                    border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border-style attribute is used with 3 elements,">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border-style="thick thin dotted"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should be the style of the top border, of the left and right borders and of the bottom border.">
+                <s:style border-left-style="thin" border-right-style="thin" border-top-style="thick" border-bottom-style="dotted"
+                    border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border-style attribute is used with 4 elements,">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border-style="thick thin dotted medium "/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should be the style of the top border, of the right border, of the bottom border and of the right border.">
+                <s:style border-left-style="medium" border-right-style="thin" border-top-style="thick" border-bottom-style="dotted"
+                    border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border-style attribute is used with invalid elements,">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border-style="thick thinner dotted medium "/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should use only the valid styles.">
+                <s:style border-left-style="medium" border-right-style="none" border-top-style="thick" border-bottom-style="dotted"
+                    border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border-style attribute is used with invalid elements,">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border-style="thick thinner"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should use only the valid styles.">
+                <s:style border-left-style="none" border-right-style="none" border-top-style="thick" border-bottom-style="thick"
+                    border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border and border-style attributes are used,">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border="hair" border-style="thick thin"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should use only the valid styles.">
+                <s:style border-left-style="thin" border-right-style="thin" border-top-style="thick" border-bottom-style="thick"
+                    border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border and border-style attributes are used and some element is invalid">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border="hair" border-style="thick thinner"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should use only the valid styles, and fall back to the style from border attribute">
+                <s:style border-left-style="hair" border-right-style="hair" border-top-style="thick" border-bottom-style="thick"
+                    border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border-style and border-bottom-style attributes are used">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border-bottom-style="hair" border-style="thick"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should use border-style for all the borders but the bottom one.">
+                <s:style border-left-style="thick" border-right-style="thick" border-top-style="thick" border-bottom-style="hair"
+                    border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black"/>
+            </x:expect>
+        </x:scenario>
+        <x:scenario label="When the border-style and border-bottom-style attributes are used">
+            <x:call function="soox:expand-border-attributes">
+                <x:param>
+                    <s:style border-top-style="hair" border-style="thick dashed" border="thin red" border-right-color="blue"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should use border-style for all the borders but the bottom one.">
+                <s:style border-left-style="dashed" border-right-style="dashed" border-top-style="hair" border-bottom-style="thick"
+                    border-left-color="red" border-right-color="blue" border-top-color="red" border-bottom-color="red"/>
+            </x:expect>
+        </x:scenario>
+        
+    </x:scenario>
+</x:description>

@@ -55,6 +55,10 @@
             <cell col="2" row="3">
                 <v>2.53</v>
             </cell>
+            <cell col="3" row="3">
+                <style numeric-format="0.0%"/>
+                <v>0.5324</v>
+            </cell>
         </data>
     </worksheet>
     <worksheet name="Sheet styling">
@@ -71,7 +75,7 @@
         </style>
         <data>
             <cell col="1" row="1">
-                <v>WIDTH/Height</v>
+                <v>Default width &amp; height</v>
             </cell> 
             <cell col="2" row="1">
                 <v>5.2</v>
@@ -86,6 +90,7 @@
                 <v>25.0</v>
             </cell>
             <cell col="1" row="2">
+                <style fill-color="#FF00FF"/>
                 <v>h=20</v>
             </cell>
             <cell col="1" row="3">
@@ -96,6 +101,280 @@
             </cell>
             <cell col="1" row="5">
                 <v>h=50</v>
+            </cell>
+        </data>
+    </worksheet>
+    
+    <worksheet name="Cell styling">
+        <data>
+            <cell col="2" row="4">
+                <v>Cell background styling</v>
+            </cell>
+            <!-- Fill styles -->
+            <cell col="2" row="5">
+                <v>Using hexadecimal notation #RRGGBB</v>
+            </cell>
+            <cell col="3" row="5">
+                <style fill-color="#FF0000"/>
+                <v>fill-color="#FF0000"</v>
+            </cell>
+            <cell col="4" row="5">
+                <style fill-color="#00FF00"/>
+                <v>fill-color="#00FF00"</v>
+            </cell>
+            <cell col="5" row="5">
+                <style fill-color="#0000FF"/>
+                <v>fill-color="#0000FF"</v>
+            </cell>
+            <cell col="6" row="5">
+                <style fill-color="#FFFF00"/>
+                <v>fill-color="#FFFF00"</v>
+            </cell>
+            <cell col="7" row="5">
+                <style fill-color="#FF00FF"/>
+                <v>fill-color="#FF00FF"</v>
+            </cell>
+            <cell col="8" row="5">
+                <style fill-color="#00FFFF"/>
+                <v>fill-color="#00FFFF"</v>
+            </cell>
+            <cell col="2" row="6">
+                <v>Using shortened hexadecimal notation #RRGGBB</v>
+            </cell>
+            <cell col="3" row="6">
+                <style fill-color="#444"/>
+                <v>fill-color="#444"</v>
+            </cell>
+            <cell col="4" row="6">
+                <style fill-color="#666"/>
+                <v>fill-color="#666"</v>
+            </cell>
+            <cell col="5" row="6">
+                <style fill-color="#888"/>
+                <v>fill-color="#888"</v>
+            </cell>
+            <cell col="6" row="6">
+                <style fill-color="#AAA"/>
+                <v>fill-color="#AAA"</v>
+            </cell>
+            <cell col="7" row="6">
+                <style fill-color="#CCC"/>
+                <v>fill-color="#CCC"</v>
+            </cell>
+            <cell col="8" row="6">
+                <style fill-color="#EEE"/>
+                <v>fill-color="#EEE"</v>
+            </cell>
+            <cell col="2" row="7">
+                <v>Using CSS color names</v>
+            </cell>
+            <cell col="3" row="7">
+                <style fill-color="aqua"/>
+                <v>fill-color="aqua"</v>
+            </cell>
+            <cell col="4" row="7">
+                <style fill-color="palevioletred"/>
+                <v>fill-color="palevioletred"</v>
+            </cell>
+            <cell col="5" row="7">
+                <style fill-color="darkorange"/>
+                <v>fill-color="darkorange"</v>
+            </cell>
+            <cell col="6" row="7">
+                <style fill-color="lightsteelblue"/>
+                <v>fill-color="lightsteelblue"</v>
+            </cell>
+            <cell col="7" row="7">
+                <style fill-color="salmon"/>
+                <v>fill-color="salmon"</v>
+            </cell>
+            <cell col="8" row="7">
+                <style fill-color="springgreen"/>
+                <v>fill-color="springgreen"</v>
+            </cell>
+        </data>
+    </worksheet>
+    
+    <worksheet name="Cell font styling">
+        <data>
+            <cell col="1" row="1">
+                <v>Cell font styling</v>
+            </cell>
+            
+            <cell col="1" row="2">
+                <v>Changing font family</v>
+            </cell>
+            <cell col="2" row="2">
+                <v>Default</v>
+            </cell>
+            <cell col="3" row="2">
+                <style font-family="Arial"/>
+                <v>font-family="Arial"</v>
+            </cell>
+            <cell col="4" row="2">
+                <style font-family="Times New Roman"/>
+                <v>font-family="Times New Roman"</v>
+            </cell>
+            <cell col="5" row="2">
+                <style font-family="Calibri"/>
+                <v>font-family="Calibri"</v>
+            </cell>
+            
+            <cell col="1" row="3">
+                <v>Changing font size</v>
+            </cell>
+            <cell col="2" row="3">
+                <v>Default</v>
+            </cell>
+            <cell col="3" row="3">
+                <style font-size="8"/>
+                <v>font-size="8"</v>
+            </cell>
+            <cell col="4" row="3">
+                <style font-size="12"/>
+                <v>font-size="12"</v>
+            </cell>
+            <cell col="5" row="3">
+                <style font-size="18"/>
+                <v>font-size="18"</v>
+            </cell>
+            <cell col="1" row="4">
+                <v>Changing font weight</v>
+            </cell>
+            <cell col="2" row="4">
+                <v>Default</v>
+            </cell>
+            <cell col="3" row="4">
+                <style font-weight="normal"/>
+                <v>font-weight="normal"</v>
+            </cell>
+            <cell col="4" row="4">
+                <style font-weight="bold"/>
+                <v>font-weight="bold"</v>
+            </cell>
+            <cell col="1" row="5">
+                <v>Changing font style</v>
+            </cell>
+            <cell col="2" row="5">
+                <v>Default</v>
+            </cell>
+            <cell col="3" row="5">
+                <style font-style="normal"/>
+                <v>font-style="normal"</v>
+            </cell>
+            <cell col="4" row="5">
+                <style font-style="italic"/>
+                <v>font-style="italic"</v>
+            </cell>
+        </data>
+    </worksheet>
+    
+    <worksheet name="Cell border styling">
+        <data>
+            <cell col="1" row="1">
+                <v>Cell border styling</v>
+            </cell>
+            
+            <cell col="1" row="2">
+                <v>Changing font family</v>
+            </cell>
+            <cell col="2" row="2">
+                <v>Default</v>
+            </cell>
+            <cell col="3" row="2">
+                <style border-top-style="thin"/>
+                <v>font-family="Arial"</v>
+            </cell>
+            <cell col="4" row="2">
+                <style border-right-style="thin"/>
+                <v>font-family="Times New Roman"</v>
+            </cell>
+            <cell col="5" row="2">
+                <style border-bottom-style="thin"/>
+                <v>font-family="Calibri"</v>
+            </cell>
+            <cell col="6" row="2">
+                <style border-left-style="thin"/>
+                <v>font-family="Calibri"</v>
+            </cell>
+            
+            <cell col="1" row="3">
+                <v>Changing border style (TOP)</v>
+            </cell>
+            <cell col="2" row="3">
+                <v>Default</v>
+            </cell>
+            <cell col="3" row="3">
+                <style border-top-style="thin"/>
+                <v>thin</v>
+            </cell>
+            <cell col="4" row="3">
+                <style border-top-style="medium"/>
+                <v>medium</v>
+            </cell>
+            <cell col="5" row="3">
+                <style border-top-style="dashed"/>
+                <v>dashed</v>
+            </cell>
+            <cell col="6" row="3">
+                <style border-top-style="dotted"/>
+                <v>dotted</v>
+            </cell>
+            <cell col="7" row="3">
+                <style border-top-style="thick"/>
+                <v>thick</v>
+            </cell>
+            <cell col="8" row="3">
+                <style border-top-style="double"/>
+                <v>double</v>
+            </cell>
+            <cell col="9" row="3">
+                <style border-top-style="hair"/>
+                <v>hair</v>
+            </cell>
+            <cell col="10" row="3">
+                <style border-top-style="mediumDashed"/>
+                <v>mediumDashed</v>
+            </cell>
+            <cell col="11" row="3">
+                <style border-top-style="dashDot"/>
+                <v>dashDot</v>
+            </cell>
+            <cell col="12" row="3">
+                <style border-top-style="mediumDashDot"/>
+                <v>mediumDashDot</v>
+            </cell>
+            <cell col="13" row="3">
+                <style border-top-style="dashDotDot"/>
+                <v>dashDotDot</v>
+            </cell>
+            <cell col="14" row="3">
+                <style border-top-style="mediumDashDotDot"/>
+                <v>mediumDashDotDot</v>
+            </cell>
+            <cell col="15" row="3">
+                <style border-top-style="slantDashDot"/>
+                <v>slantDashDot</v>
+            </cell>
+            
+            
+            <cell col="1" row="5">
+                <v>Changing border color (BOTTOM)</v>
+            </cell>
+            <cell col="2" row="5">
+                <v>Default</v>
+            </cell>
+            <cell col="3" row="5">
+                <style border-bottom-style="medium" border-bottom-color='red'/>
+                <v>red</v>
+            </cell>
+            <cell col="4" row="5">
+                <style border-bottom-style="medium" border-bottom-color='green'/>
+                <v>green</v>
+            </cell>
+            <cell col="5" row="5">
+                <style border-bottom-style="medium" border-bottom-color='blue'/>
+                <v>blue</v>
             </cell>
         </data>
     </worksheet>

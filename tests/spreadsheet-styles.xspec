@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+    xmlns:s="soox"
+    xmlns:soox="simplify-office-open-xml"
+    xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    xslt-version="3.0"
+    run-as="external"
+    stylesheet="spreadsheet-test-package.xsl">
+    
+    <x:variable name="x:saxon-config" href="saxon-HE.config"/>
+    
+    <x:scenario label="Unit testing of styles functions">
+        <x:variable name="styles" as="element(s:style)*">
+            <s:style>
+                <s:fill bg="FFFF00FF"/>
+            </s:style>
+            <s:style>
+                <s:fill bg="FFFF0000"/>
+            </s:style>
+            <s:style>
+                <s:fill bg="FFFFFF00"/>
+            </s:style>
+            <s:style>
+                <s:fill bg="FFFF0000"/>
+            </s:style>
+        </x:variable>
+        <x:scenario label="When building fill styles table, ">
+            <x:variable name="uniqueFills" select="($styles//s:fill/@bg)=>distinct-values()=>count()"/>
+            <x:call function="soox:computeStyleFillsTable">
+                <x:param select="$styles"/>
+            </x:call>
+            <x:expect label="the table should have 5 (3 uniques fill + 2 default)" 
+                test="//sml:fill=>count()" select="2+$uniqueFills"/>
+            <x:expect label="the first entry should be the 'no fill' pattern" as="element(sml:fill)*"
+                test="//sml:fill[1]">
+                <sml:fill>
+                    <sml:patternFill patternType="none"/>
+                </sml:fill>
+            </x:expect>
+            <x:expect label="the last  entries should be the 'solid' fill patterns defined in styles" as="element(sml:fill)*"
+                test="//sml:fill[position() gt (last() - $uniqueFills)]">
+                <sml:fill>
+                    <sml:patternFill patternType="solid">
+                        <sml:fgColor rgb="FFFF00FF"/>
+                        <sml:bgColor rgb="FFFF00FF"/>
+                    </sml:patternFill>
+                </sml:fill>
+                <sml:fill>
+                    <sml:patternFill patternType="solid">
+                        <sml:fgColor rgb="FFFF0000"/>
+                        <sml:bgColor rgb="FFFF0000"/>
+                    </sml:patternFill>
+                </sml:fill>
+                <sml:fill>
+                    <sml:patternFill patternType="solid">
+                        <sml:fgColor rgb="FFFFFF00"/>
+                        <sml:bgColor rgb="FFFFFF00"/>
+                    </sml:patternFill>
+                </sml:fill>
+            </x:expect>
+        </x:scenario>
+        
+        <x:scenario label="When using the fill styles table to get the index ">
+            <!--x:variable name="fillStylesTable" select="$styles=>soox:computeStyleFillsTable()"/-->
+            <x:variable name="fillStylesTable">
+                <sml:fill>
+                    <sml:patternFill patternType="none"/>
+                </sml:fill>
+                <sml:fill>
+                    <sml:patternFill patternType="gray125"/>
+                </sml:fill>
+                <sml:fill>
+                    <sml:patternFill patternType="solid">
+                        <sml:fgColor rgb="FFFF00FF"/>
+                        <sml:bgColor rgb="FFFF00FF"/>
+                    </sml:patternFill>
+                </sml:fill>
+                <sml:fill>
+                    <sml:patternFill patternType="solid">
+                        <sml:fgColor rgb="FFFF0000"/>
+                        <sml:bgColor rgb="FFFF0000"/>
+                    </sml:patternFill>
+                </sml:fill>
+                <sml:fill>
+                    <sml:patternFill patternType="solid">
+                        <sml:fgColor rgb="FFFFFF00"/>
+                        <sml:bgColor rgb="FFFFFF00"/>
+                    </sml:patternFill>
+                </sml:fill>
+            </x:variable>
+            
+            <x:scenario label="and the fill style is in the table, ">
+                <x:call function="soox:getFillStyleIndex">
+                    <x:param select="$fillStylesTable"/>
+                    <x:param>
+                        <s:fill bg="FFFF0000"/>
+                    </x:param>
+                </x:call>
+                <x:expect label="the index should be 4" select="4"/>
+            </x:scenario>
+            <x:scenario label="and the fill style is not in the table, ">
+                <x:call function="soox:getFillStyleIndex">
+                    <x:param select="$fillStylesTable"/>
+                    <x:param>
+                        <s:fill bg="FFABCDEF"/>
+                    </x:param>
+                </x:call>
+                <x:expect label="the empty sequence should be retuned" select="()"/>
+            </x:scenario>
+        </x:scenario>
+    </x:scenario>
+</x:description>

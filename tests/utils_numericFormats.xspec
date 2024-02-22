@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+    xmlns:s="soox"
+    xmlns:soox="simplify-office-open-xml"
+    xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    xslt-version="3.0"
+    run-as="import"
+    stylesheet="../src/utils_numericFormats.xsl">
+    
+    <!--x:variable name="x:saxon-config" href="saxon-HE.config"/-->
+    
+    <!--x:helper stylesheet="../src/utils_colors.xsl"/-->
+    
+    <x:scenario label="Unit testing of soox:numeric-formats-table">
+        <x:scenario label="When no style is given">
+           <x:call function="soox:numeric-formats-table">
+               <x:param select="()"/>
+           </x:call>
+           <x:expect label="it should return a table only containing the 'no-fill' element"/>
+           
+        </x:scenario>
+        <x:scenario label="When no style is given">
+            <x:call function="soox:numeric-formats-table">
+                <x:param>
+                    <s:style numeric-format="General"/>
+                    <s:style/>
+                    <s:style numeric-format="0.000"/>
+                    <s:style numeric-format="0"/>
+                    <s:style numeric-format="0.0%"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should return a table only containing the 'no-fill' element">
+                <sml:numFmts count="2">
+                    <sml:numFmt numFmtId="164" formatCode="0.000"/>
+                    <sml:numFmt numFmtId="165" formatCode="0.0%"/>
+                </sml:numFmts>
+            </x:expect>
+        </x:scenario>
+    </x:scenario>
+    
+    <x:scenario label="Unit testing of soox:buildNumFmtMap">
+        <x:scenario label="When no style is given">
+            <x:call function="soox:buildNumFmtMap">
+                <x:param>
+                    <s:style numeric-format="General"/>
+                    <s:style/>
+                    <s:style numeric-format="0.000"/>
+                    <s:style numeric-format="0"/>
+                    <s:style numeric-format="0.0%"/>
+                </x:param>
+            </x:call>
+            <x:expect label="it should return a table only containing the 'no-fill' element" select="map{164:'0.000',165:'0.00%'}"/>
+        </x:scenario>
+    </x:scenario>
+</x:description>

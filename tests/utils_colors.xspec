@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+    xmlns:s="soox"
+    xmlns:soox="simplify-office-open-xml"
+    xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    xslt-version="3.0"
+    run-as="import"
+    stylesheet="../src/utils_colors.xsl">
+    
+    <!--x:variable name="x:saxon-config" href="saxon-HE.config"/-->
+    
+    
+    <x:scenario label="Unit testing of soox:parse-color">
+        <x:scenario label="When the argument is a hexadecimal color #ABCDEF,">
+           <x:call function="soox:parse-color">
+               <x:param select="'#ABCDEF'"/>
+           </x:call>
+           <x:expect label="it should return a string in the form of FFRRGGBB (FFABCDEF)" select="'FFABCDEF'"/>
+        </x:scenario>
+        <x:scenario label="When the argument is a shortened hexadecimal color #ABC,">
+            <x:call function="soox:parse-color">
+                <x:param select="'#ABC'"/>
+            </x:call>
+            <x:expect label="it should return a string in the form of FFRRGGBB (FFAABBCC)" select="'FFAABBCC'"/>
+        </x:scenario>
+        <x:scenario label="When the argument is a hexadecimal color with alpha #ABCDEF88,">
+            <x:call function="soox:parse-color">
+                <x:param select="'#ABCDEF88'"/>
+            </x:call>
+            <x:expect label="it should return a string in the form of FFRRGGBB (FFABCDEF)" select="'88ABCDEF'"/>
+        </x:scenario>
+        <x:scenario label="When the argument is a shortened hexadecimal color with alpha,">
+            <x:call function="soox:parse-color">
+                <x:param select="'#ABC8'"/>
+            </x:call>
+            <x:expect label="it should return a string in the form of FFRRGGBB (FFAABBCC)" select="'88AABBCC'"/>
+        </x:scenario>
+        <x:scenario label="When the argument is a CSS color 'darkgreen'">
+            <x:call function="soox:parse-color">
+                <x:param select="'darkgreen'"/>
+            </x:call>
+            <x:expect label="it should return a string in the form of FFRRGGBB (FF006400)" select="'FF006400'"/>
+        </x:scenario>
+        <x:scenario label="When the argument is a name not in CSS color 'darkbluegreen'">
+            <x:call function="soox:parse-color">
+                <x:param select="'darkbluegreen'"/>
+            </x:call>
+            <x:expect label="it should return a string in the form of FFRRGGBB that is the default color (FF00000)" select="'FF000000'"/>
+        </x:scenario>
+        <x:scenario label="When the argument is not recognized and a default color is given">
+            <x:call function="soox:parse-color">
+                <x:param select="'an unknow color'"/>
+                <x:param select="'FFAABBCC'"/>
+            </x:call>
+            <x:expect label="it should return a string in the form of FFRRGGBB  that is the default given color (FFAABBCC)" select="'FFAABBCC'"/>
+        </x:scenario>
+    </x:scenario>
+</x:description>
