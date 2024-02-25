@@ -28,21 +28,23 @@
         <xd:return>A 'style' element</xd:return>
     </xd:doc>
     <xsl:function name="soox:expand-border-attributes" as="element(s:style)">
-        <xsl:param name="style" as="element(s:style)"/>
+        <xsl:param name="style" as="element(s:style)?"/>
         
         <!--TODO-->
         <xsl:variable name="from-border" as="element(s:style)">
             <xsl:variable name="tokens" select="($style/@border=>normalize-space()=>tokenize(' '))"/>
             <s:style>
                 <xsl:if test="$tokens[1]=$borders-styles">
-                    <xsl:for-each select="('left','right','top','bottom')!concat('border-',.,'-style')">
-                        <xsl:attribute name="{current()}" select="$tokens[1]"/>
-                    </xsl:for-each>
+                    <xsl:attribute name="border-left-style" select="$tokens[1]"/>
+                    <xsl:attribute name="border-right-style" select="$tokens[1]"/>
+                    <xsl:attribute name="border-top-style" select="$tokens[1]"/>
+                    <xsl:attribute name="border-bottom-style" select="$tokens[1]"/>
                 </xsl:if>
                 <xsl:if test="$tokens[2] and not($tokens[2]=>soox:parse-color('invalid') = 'invalid')">
-                    <xsl:for-each select="('left','right','top','bottom')!concat('border-',.,'-color')">
-                        <xsl:attribute name="{current()}" select="$tokens[2]"/>
-                    </xsl:for-each>
+                    <xsl:attribute name="border-left-color" select="$tokens[2]"/>
+                    <xsl:attribute name="border-right-color" select="$tokens[2]"/>
+                    <xsl:attribute name="border-top-color" select="$tokens[2]"/>
+                    <xsl:attribute name="border-bottom-color" select="$tokens[2]"/>
                 </xsl:if>
             </s:style>
         </xsl:variable>
@@ -53,21 +55,20 @@
                 <xsl:choose>
                     <xsl:when test="count($tokens)=1">
                         <xsl:if test="$tokens[1]=$borders-styles">
-                            <xsl:for-each select="('left','right','top','bottom')!concat('border-',.,'-style')">
-                                <xsl:attribute name="{current()}" select="$tokens[1]"/>
-                            </xsl:for-each>
+                            <xsl:attribute name="border-left-style" select="$tokens[1]"/>
+                            <xsl:attribute name="border-right-style" select="$tokens[1]"/>
+                            <xsl:attribute name="border-top-style" select="$tokens[1]"/>
+                            <xsl:attribute name="border-bottom-style" select="$tokens[1]"/>
                         </xsl:if>
                     </xsl:when>
                     <xsl:when test="count($tokens)=2">
                         <xsl:if test="$tokens[1]=$borders-styles">
-                            <xsl:for-each select="('top','bottom')!concat('border-',.,'-style')">
-                                <xsl:attribute name="{current()}" select="$tokens[1]"/>
-                            </xsl:for-each>
+                            <xsl:attribute name="border-top-style" select="$tokens[1]"/>
+                            <xsl:attribute name="border-bottom-style" select="$tokens[1]"/>
                         </xsl:if>
                         <xsl:if test="$tokens[2]=$borders-styles">
-                            <xsl:for-each select="('left','right')!concat('border-',.,'-style')">
-                                <xsl:attribute name="{current()}" select="$tokens[2]"/>
-                            </xsl:for-each>
+                            <xsl:attribute name="border-left-style" select="$tokens[2]"/>
+                            <xsl:attribute name="border-right-style" select="$tokens[2]"/>
                         </xsl:if>
                     </xsl:when>
                     <xsl:when test="count($tokens)=3">
@@ -75,9 +76,8 @@
                             <xsl:attribute name="border-top-style" select="$tokens[1]"/>
                         </xsl:if>
                         <xsl:if test="$tokens[2]=$borders-styles">
-                            <xsl:for-each select="('left','right')!concat('border-',.,'-style')">
-                                <xsl:attribute name="{current()}" select="$tokens[2]"/>
-                            </xsl:for-each>
+                            <xsl:attribute name="border-left-style" select="$tokens[2]"/>
+                            <xsl:attribute name="border-right-style" select="$tokens[2]"/>
                         </xsl:if>
                         <xsl:if test="$tokens[3]=$borders-styles">
                             <xsl:attribute name="border-bottom-style" select="$tokens[3]"/>
@@ -107,23 +107,21 @@
             <s:style>
                 <xsl:choose>
                     <xsl:when test="count($tokens)=1">
-                        <xsl:for-each select="('left','right','top','bottom')!concat('border-',.,'-color')">
-                            <xsl:attribute name="{current()}" select="$tokens[1]"/>
-                        </xsl:for-each>
+                        <xsl:attribute name="border-left-color" select="$tokens[1]"/>
+                        <xsl:attribute name="border-right-color" select="$tokens[1]"/>
+                        <xsl:attribute name="border-top-color" select="$tokens[1]"/>
+                        <xsl:attribute name="border-bottom-color" select="$tokens[1]"/>
                     </xsl:when>
                     <xsl:when test="count($tokens)=2">
-                        <xsl:for-each select="('top','bottom')!concat('border-',.,'-color')">
-                            <xsl:attribute name="{current()}" select="$tokens[1]"/>
-                        </xsl:for-each>
-                        <xsl:for-each select="('left','right')!concat('border-',.,'-color')">
-                            <xsl:attribute name="{current()}" select="$tokens[2]"/>
-                        </xsl:for-each>
+                        <xsl:attribute name="border-top-color" select="$tokens[1]"/>
+                        <xsl:attribute name="border-bottom-color" select="$tokens[1]"/>
+                        <xsl:attribute name="border-left-color" select="$tokens[2]"/>
+                        <xsl:attribute name="border-right-color" select="$tokens[2]"/>
                     </xsl:when>
                     <xsl:when test="count($tokens)=3">
                         <xsl:attribute name="border-top-color" select="$tokens[1]"/>
-                        <xsl:for-each select="('left','right')!concat('border-',.,'-style')">
-                            <xsl:attribute name="{current()}" select="$tokens[2]"/>
-                        </xsl:for-each>
+                        <xsl:attribute name="border-left-color" select="$tokens[2]"/>
+                        <xsl:attribute name="border-right-color" select="$tokens[2]"/>
                         <xsl:attribute name="border-bottom-color" select="$tokens[3]"/>
                     </xsl:when>
                     <xsl:when test="count($tokens)=4">
@@ -138,27 +136,56 @@
         </xsl:variable>
         
         <xsl:variable name="from-border-leftrighttopbottom" as="element(s:style)+">
-            <xsl:for-each select="('left','right','top','bottom')!concat('border-',.)">
-                
-                <xsl:variable name="tokens" select="($style!attribute::*[name()= current()])=>normalize-space()=>tokenize(' ')"/>
-                <s:style>
-                    <xsl:if test="$tokens[1]=$borders-styles">
-                        <xsl:attribute name="{current()}-style" select="$tokens[1]"/>
-                    </xsl:if>
-                    <xsl:if test="$tokens[2] and not($tokens[2]=>soox:parse-color('invalid') = 'invalid')">
-                        <xsl:attribute name="{current()}-color" select="$tokens[2]"/>
-                    </xsl:if>
-                </s:style>
-            </xsl:for-each>
+            <s:style>
+                <xsl:variable name="tokens" select="$style/@border-left=>normalize-space()=>tokenize(' ')"/>
+                <xsl:if test="$tokens[1]=$borders-styles">
+                    <xsl:attribute name="border-left-style" select="$tokens[1]"/>
+                </xsl:if>
+                <xsl:if test="$tokens[2] and not($tokens[2]=>soox:parse-color('invalid') = 'invalid')">
+                    <xsl:attribute name="border-left-color" select="$tokens[2]"/>
+                </xsl:if>
+            </s:style>
+            <s:style>
+                <xsl:variable name="tokens" select="$style/@border-right=>normalize-space()=>tokenize(' ')"/>
+                <xsl:if test="$tokens[1]=$borders-styles">
+                    <xsl:attribute name="border-right-style" select="$tokens[1]"/>
+                </xsl:if>
+                <xsl:if test="$tokens[2] and not($tokens[2]=>soox:parse-color('invalid') = 'invalid')">
+                    <xsl:attribute name="border-right-color" select="$tokens[2]"/>
+                </xsl:if>
+            </s:style>
+            <s:style>
+                <xsl:variable name="tokens" select="$style/@border-top=>normalize-space()=>tokenize(' ')"/>
+                <xsl:if test="$tokens[1]=$borders-styles">
+                    <xsl:attribute name="border-top-style" select="$tokens[1]"/>
+                </xsl:if>
+                <xsl:if test="$tokens[2] and not($tokens[2]=>soox:parse-color('invalid') = 'invalid')">
+                    <xsl:attribute name="border-top-color" select="$tokens[2]"/>
+                </xsl:if>
+            </s:style>
+            <s:style>
+                <xsl:variable name="tokens" select="$style/@border-bottom=>normalize-space()=>tokenize(' ')"/>
+                <xsl:if test="$tokens[1]=$borders-styles">
+                    <xsl:attribute name="border-bottom-style" select="$tokens[1]"/>
+                </xsl:if>
+                <xsl:if test="$tokens[2] and not($tokens[2]=>soox:parse-color('invalid') = 'invalid')">
+                    <xsl:attribute name="border-bottom-color" select="$tokens[2]"/>
+                </xsl:if>
+            </s:style>
         </xsl:variable>
         
         <xsl:variable name="from-border-detailed" as="element(s:style)">
             <s:style>
-                <xsl:for-each select="('left','right','top','bottom')!concat('border-',.)">
+                <xsl:copy-of select="$style/attribute::*[name()= $borders]"/>
+                <!--xsl:for-each select="$borders">
+                    <xsl:copy-of select="$style/attribute::*[name()= current()]"/>
+                </xsl:for-each-->
+                
+                <!--xsl:for-each select="('left','right','top','bottom')!concat('border-',.)">
                     <xsl:for-each select="('style','color')!concat(current(),'-',.)">
                         <xsl:copy-of select="$style/attribute::*[name()= current()]"/>
                     </xsl:for-each>
-                </xsl:for-each>
+                </xsl:for-each-->
             </s:style>
         </xsl:variable>
         <xsl:sequence select="($from-border-detailed,$from-border-leftrighttopbottom,$from-border-color,$from-border-style,$from-border)=>soox:cascade-border-style()"/>
@@ -177,14 +204,14 @@
         <xsl:param name="styles" as="element(s:style)+"/>
         
         <s:style>
-            <xsl:for-each select="('left','right','top','bottom')!concat('border-',.)">
-                <xsl:for-each select="('style','color')!concat(current(),'-',.)">
-                    <xsl:variable name="value" select="(($styles,$default-border)!attribute::*[name()=current()])[1]" as="xs:string*"/>
-                    <xsl:if test="$value">
-                        <xsl:attribute name="{current()}" select="$value"/>    
-                    </xsl:if>
-                </xsl:for-each>
-            </xsl:for-each>
+            <xsl:attribute name="border-top-style" select="($styles/@border-top-style,$default-border/@border-top-style)[1]"/>
+            <xsl:attribute name="border-left-style" select="($styles/@border-left-style,$default-border/@border-left-style)[1]"/>
+            <xsl:attribute name="border-right-style" select="($styles/@border-right-style,$default-border/@border-right-style)[1]"/>
+            <xsl:attribute name="border-bottom-style" select="($styles/@border-bottom-style,$default-border/@border-bottom-style)[1]"/>
+            <xsl:attribute name="border-top-color" select="($styles/@border-top-color,$default-border/@border-top-color)[1]"/>
+            <xsl:attribute name="border-left-color" select="($styles/@border-left-color,$default-border/@border-left-color)[1]"/>
+            <xsl:attribute name="border-right-color" select="($styles/@border-right-color,$default-border/@border-right-color)[1]"/>
+            <xsl:attribute name="border-bottom-color" select="($styles/@border-bottom-color,$default-border/@border-bottom-color)[1]"/>
         </s:style>
     </xsl:function>
     
@@ -203,14 +230,15 @@
     </xd:doc>
     <xsl:function name="soox:border-left" as="xs:string">
         <xsl:param name="style" as="element(s:style)?"/>
+        <xsl:param name="expanded-style" as="element(s:style)?"/>
         
         <xsl:variable name="border-style" as="xs:string"
-            select="($style/@border-left-style,soox:expand-border-attributes($style)/@border-left-style,'none')[1]"/>
+            select="($style/@border-left-style,$expanded-style/@border-left-style,'none')[1]"/>
         <xsl:choose>
             <xsl:when test="$border-style='none'">none</xsl:when>
             <xsl:otherwise>
                 <xsl:variable name="border-color" as="xs:string"
-                    select="($style/@border-left-color,soox:expand-border-attributes($style)/@border-left-color,'black')[1]=>soox:parse-color()"/>
+                    select="($style/@border-left-color,$expanded-style/@border-left-color,'black')[1]=>soox:parse-color()"/>
                 <xsl:sequence select="string-join(($border-style,$border-color),'#')"/>
             </xsl:otherwise>
         </xsl:choose>
@@ -231,14 +259,16 @@
     </xd:doc>
     <xsl:function name="soox:border-right" as="xs:string">
         <xsl:param name="style" as="element(s:style)?"/>
+        <xsl:param name="expanded-style" as="element(s:style)?"/>
+        
         
         <xsl:variable name="border-style" as="xs:string"
-            select="($style/@border-right-style,soox:expand-border-attributes($style)/@border-right-style,'none')[1]"/>
+            select="($style/@border-right-style,$expanded-style/@border-right-style,'none')[1]"/>
         <xsl:choose>
             <xsl:when test="$border-style='none'">none</xsl:when>
             <xsl:otherwise>
                 <xsl:variable name="border-color" as="xs:string"
-                    select="($style/@border-right-color,soox:expand-border-attributes($style)/@border-right-color,'black')[1]=>soox:parse-color()"/>
+                    select="($style/@border-right-color,$expanded-style/@border-right-color,'black')[1]=>soox:parse-color()"/>
                 <xsl:sequence select="string-join(($border-style,$border-color),'#')"/>
             </xsl:otherwise>
         </xsl:choose>
@@ -259,14 +289,15 @@
     </xd:doc>
     <xsl:function name="soox:border-top" as="xs:string">
         <xsl:param name="style" as="element(s:style)?"/>
+        <xsl:param name="expanded-style" as="element(s:style)?"/>
         
         <xsl:variable name="border-style" as="xs:string"
-            select="($style/@border-top-style,soox:expand-border-attributes($style)/@border-top-style,'none')[1]"/>
+            select="($style/@border-top-style,$expanded-style/@border-top-style,'none')[1]"/>
         <xsl:choose>
             <xsl:when test="$border-style='none'">none</xsl:when>
             <xsl:otherwise>
                 <xsl:variable name="border-color" as="xs:string"
-                    select="($style/@border-top-color,soox:expand-border-attributes($style)/@border-top-color,'black')[1]=>soox:parse-color()"/>
+                    select="($style/@border-top-color,$expanded-style/@border-top-color,'black')[1]=>soox:parse-color()"/>
                 <xsl:sequence select="string-join(($border-style,$border-color),'#')"/>
             </xsl:otherwise>
         </xsl:choose>
@@ -287,14 +318,15 @@
     </xd:doc>
     <xsl:function name="soox:border-bottom" as="xs:string">
         <xsl:param name="style" as="element(s:style)?"/>
+        <xsl:param name="expanded-style" as="element(s:style)?"/>
         
         <xsl:variable name="border-style" as="xs:string"
-            select="($style/@border-bottom-style,soox:expand-border-attributes($style)/@border-bottom-style,'none')[1]"/>
+            select="($style/@border-bottom-style,$expanded-style/@border-bottom-style,'none')[1]"/>
         <xsl:choose>
             <xsl:when test="$border-style='none'">none</xsl:when>
             <xsl:otherwise>
                 <xsl:variable name="border-color" as="xs:string"
-                    select="($style/@border-bottom-color,soox:expand-border-attributes($style)/@border-bottom-color,'black')[1]=>soox:parse-color()"/>
+                    select="($style/@border-bottom-color,$expanded-style/@border-bottom-color,'black')[1]=>soox:parse-color()"/>
                 <xsl:sequence select="string-join(($border-style,$border-color),'#')"/>
             </xsl:otherwise>
         </xsl:choose>
@@ -311,12 +343,13 @@
     <xsl:function name="soox:border-signature" as="xs:string">
         <xsl:param name="style" as="element(s:style)?"/>
         
+        <xsl:variable name="expanded-style" select="soox:expand-border-attributes($style)"/>
         <xsl:sequence select="if ($style) then 
                 map{
-                'left':soox:border-left($style),
-                'right':soox:border-right($style),
-                'top':soox:border-top($style),
-                'bottom':soox:border-bottom($style)
+                'left':soox:border-left($style,$expanded-style),
+                'right':soox:border-right($style,$expanded-style),
+                'top':soox:border-top($style,$expanded-style),
+                'bottom':soox:border-bottom($style,$expanded-style)
                 }=>serialize(map{'method':'adaptive'}) 
                 else soox:border-signature($default-border)"/>
     </xsl:function>
@@ -336,30 +369,31 @@
             <xsl:for-each-group select="($default-border,$styles)" group-by="soox:border-signature(.)">
                 <xsl:map-entry key="current-grouping-key()">
                     <xsl:variable name="border-style" select="current-group()[1]"/>
+                    <xsl:variable name="expanded-style" select="soox:expand-border-attributes($border-style)"/>
                     <sml:border>
                         <sml:left>
-                            <xsl:variable name="args" select="soox:border-left($border-style)=>tokenize('#')"/>
+                            <xsl:variable name="args" select="soox:border-left($border-style,$expanded-style)=>tokenize('#')"/>
                             <xsl:if test="$args[1] ne 'none'">
                                 <xsl:attribute name="style" select="$args[1]"/>
                                 <sml:color rgb="{$args[2]}"/>
                             </xsl:if>
                         </sml:left>
                         <sml:right>
-                            <xsl:variable name="args" select="soox:border-right($border-style)=>tokenize('#')"/>
+                            <xsl:variable name="args" select="soox:border-right($border-style,$expanded-style)=>tokenize('#')"/>
                             <xsl:if test="$args[1] ne 'none'">
                                 <xsl:attribute name="style" select="$args[1]"/>
                                 <sml:color rgb="{$args[2]}"/>
                             </xsl:if>
                         </sml:right>
                         <sml:top>
-                            <xsl:variable name="args" select="soox:border-top($border-style)=>tokenize('#')"/>
+                            <xsl:variable name="args" select="soox:border-top($border-style,$expanded-style)=>tokenize('#')"/>
                             <xsl:if test="$args[1] ne 'none'">
                                 <xsl:attribute name="style" select="$args[1]"/>
                                 <sml:color rgb="{$args[2]}"/>
                             </xsl:if>
                         </sml:top>
                         <sml:bottom>
-                            <xsl:variable name="args" select="soox:border-bottom($border-style)=>tokenize('#')"/>
+                            <xsl:variable name="args" select="soox:border-bottom($border-style,$expanded-style)=>tokenize('#')"/>
                             <xsl:if test="$args[1] ne 'none'">
                                 <xsl:attribute name="style" select="$args[1]"/>
                                 <sml:color rgb="{$args[2]}"/>
@@ -428,5 +462,10 @@
     <xsl:variable name="borders-styles" as="xs:string+"
         select="('inherit','none','thin','medium','dashed','dotted','thick','double','hair',
         'mediumDashed','dashDot','mediumDashDot','dashDotDot','mediumDashDotDot','slantDashDot')"/>
+    
+    <xsl:variable name="borders" select="('border-left-style','border-left-color',
+        'border-right-style','border-right-color',
+        'border-top-style','border-top-color',
+        'border-bottom-style','border-bottom-color')"/>
     
 </xsl:stylesheet>
