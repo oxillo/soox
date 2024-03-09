@@ -34,5 +34,10 @@
         <xsl:sequence select="soox:fromOfficeOpenXml( $xlsx-file, map{} )"/>
     </xsl:template>
     
+    <xsl:template match="/">
+        <xsl:variable name="xlsx-file" select="resolve-uri('generated-OfficeOpenXml-workbook.xlsx',$base)"/>
+        <xsl:copy-of select="soox:toOfficeOpenXml( . , map{'uri':$xlsx-file} )"/>
+        <xsl:sequence select="soox:fromOfficeOpenXml( $xlsx-file, map{} )"/>
+    </xsl:template>
   
 </xsl:stylesheet>
