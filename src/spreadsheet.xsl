@@ -89,16 +89,23 @@
         <xsl:param name="elem"/>
         <xsl:param name="base"/>
         
+        <!-- do style cascading in order that every cell has *all* style attributes (ex: @border-style expanded to @border-*-style -->
+        <xsl:variable name="wbk" as="element()">
+            <xsl:apply-templates select="$elem" mode="soox:spreadsheet-styles-cascade">
+                <xsl:with-param name="style" tunnel="yes" select="$default-cell-style"/>
+            </xsl:apply-templates>
+        </xsl:variable>
+        
         <!-- Compute items shared across worksheets : shared strings and styles -->
-        <xsl:variable name="sharedStrings.xml" select="$elem => soox:sharedStrings.xml()"/>
-        <xsl:variable name="styles.xml" select="$elem => soox:styles.xml()"/>
-        <xsl:variable name="cell-styles-map" select="$elem//s:cell/s:style => soox:buildCellStylesMap()"/>
+        <xsl:variable name="sharedStrings.xml" select="$wbk => soox:sharedStrings.xml()"/>
+        <xsl:variable name="styles.xml" select="$wbk => soox:styles.xml()"/>
+        <xsl:variable name="cell-styles-map" select="$wbk//s:cell/s:style => soox:buildCellStylesMap()"/>
         
         <xsl:variable name="worksheets" as="map(*)">
             <xsl:variable name="ws" as="map(*)*">
                 <xsl:variable name="wstype" select="'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet'"/>
                 <xsl:variable name="shared-strings" select="$sharedStrings.xml('content')//*:sst/*:si/*:t/text()"/>
-                <xsl:for-each select="$elem/s:worksheet">
+                <xsl:for-each select="$wbk/s:worksheet">
                     <xsl:variable name="wsfilename" select="$base||'worksheets/sheet'||position()||'.xml'"/>
                     <xsl:sequence select="map:entry($wsfilename,current()=>soox:worksheet.xml($shared-strings, $cell-styles-map))"/>
                 </xsl:for-each>
@@ -110,7 +117,7 @@
             map:entry($base||'styles.xml', $styles.xml),
             map:entry($base||'sharedStrings.xml', $sharedStrings.xml)))"/>
         <xsl:variable name="workbook.xml.rels" select="$files => soox:build-relationship-file('xl')"/>
-        <xsl:variable name="workbook.xml" select="$elem => soox:workbook.xml( $workbook.xml.rels )"/>
+        <xsl:variable name="workbook.xml" select="$wbk => soox:workbook.xml( $workbook.xml.rels )"/>
         
         
         <xsl:sequence select="map:merge(($files,map{$base||'workbook.xml':$workbook.xml, $base||'_rels/workbook.xml.rels':$workbook.xml.rels}))"/>

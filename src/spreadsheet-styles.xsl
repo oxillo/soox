@@ -32,60 +32,70 @@
     <xd:desc>
       <xd:p></xd:p>
     </xd:desc>
+    <xd:param name="style"></xd:param>
   </xd:doc>
-  <xsl:template match="text()" mode="soox:spreadsheet-styles-cascade"/>
-  
-  <xd:doc>
-    <xd:desc>
-      <xd:p></xd:p>
-    </xd:desc>
-    <xd:param name="default-style"></xd:param>
-  </xd:doc>
-  <xsl:template match="s:workbook|s:worksheet" mode="soox:spreadsheet-styles-cascade">
-    <xsl:param name="default-style" tunnel="yes"/>
-    
-    <xsl:variable name="updated-default-style" as="map(*)" select="soox:cascade-style($default-style,s:style)"/>
+  <xsl:template match="s:workbook|s:worksheet|s:cell" mode="soox:spreadsheet-styles-cascade">
+    <xsl:param name="style" tunnel="yes"/>
     
     <xsl:copy>
       <xsl:copy-of select="@*"/>
-      <xsl:apply-templates mode="#current">
-        <xsl:with-param name="default-style" select="$updated-default-style" tunnel="yes"/>
+      <xsl:apply-templates mode="#current" select="element()">
+        <xsl:with-param name="style" select="soox:cascade-style($style,s:style)" tunnel="yes"/>
       </xsl:apply-templates>
     </xsl:copy>
   </xsl:template>
   
+  
   <xd:doc>
     <xd:desc>
-      <xd:p></xd:p>
+      <xd:p>Rewrite s:style element to remove style attributes that should have been cascaded (workbook and worksheet)
+        and to output final style sttributes (after style cascade) for cells</xd:p>
     </xd:desc>
-    <xd:param name="default-style"></xd:param>
+    <xd:param name="style">A map holding the cell style after style cascading (workbook->worksheet->cell) </xd:param>
   </xd:doc>
-  <xsl:template match="s:cell" mode="soox:spreadsheet-styles-cascade">
-    <xsl:param name="default-style" tunnel="yes"/>
+  <xsl:template match="s:style" mode="soox:spreadsheet-styles-cascade">
+    <xsl:param name="style" as="map(*)" tunnel="yes"/>
     
-    <xsl:variable name="s" as="map(*)" select="soox:cascade-style($default-style,s:style)"/>
     <xsl:copy>
-      <xsl:element name="style" namespace="soox">
-        <xsl:attribute name="border-left" select="$s('border-left-style')"/>  
-        <xsl:attribute name="border-right-style" select="$s('border-right-style')"/>
-        <xsl:attribute name="border-top-style" select="$s('border-top-style')"/>
-        <xsl:attribute name="border-bottom-style" select="$s('border-bottom-style')"/>
-        <xsl:attribute name="border-left-color" select="$s('border-left-color')"/>  
-        <xsl:attribute name="border-right-color" select="$s('border-right-color')"/>
-        <xsl:attribute name="border-top-color" select="$s('border-top-color')"/>
-        <xsl:attribute name="border-bottom-color" select="$s('border-bottom-color')"/>
-        <xsl:copy-of select="s:style/*"/>
-      </xsl:element>
+      <xsl:if test="parent::s:cell">
+        <!-- border style -->
+        <xsl:attribute name="border-left-style" select="$style('border-left-style')"/>  
+        <xsl:attribute name="border-right-style" select="$style('border-right-style')"/>
+        <xsl:attribute name="border-top-style" select="$style('border-top-style')"/>
+        <xsl:attribute name="border-bottom-style" select="$style('border-bottom-style')"/>
+        <!-- border color -->
+        <xsl:attribute name="border-left-color" select="$style('border-left-color')"/>  
+        <xsl:attribute name="border-right-color" select="$style('border-right-color')"/>
+        <xsl:attribute name="border-top-color" select="$style('border-top-color')"/>
+        <xsl:attribute name="border-bottom-color" select="$style('border-bottom-color')"/>
+        <xsl:variable name="border-signature" select="(
+          $style('border-left-style'),$style('border-left-color'),
+          $style('border-right-style'),$style('border-right-color'),
+          $style('border-top-style'),$style('border-top-color'),
+          $style('border-bottom-style'),$style('border-bottom-color'))=>string-join('#')"/>
+        <xsl:attribute name="border-signature" select="$border-signature"/>
+        <!-- font -->
+        <xsl:attribute name="font-family" select="$style('font-family')"/>
+        <xsl:attribute name="font-size" select="$style('font-size')"/>
+        <xsl:attribute name="font-weight" select="$style('font-weight')"/>
+        <xsl:attribute name="font-style" select="$style('font-style')"/>
+        <xsl:variable name="font-signature" select="($style('font-family'),$style('font-size'),$style('font-weight'),$style('font-style'))=>string-join('#')"/>
+        <xsl:attribute name="font-signature" select="$font-signature"/> 
+        <!-- fill -->
+        <xsl:attribute name="fill-style" select="$style('fill-style')"/>
+        <xsl:attribute name="fill-color" select="$style('fill-color')"/>
+        <xsl:variable name="fill-signature" select="($style('fill-style'),$style('fill-color'))=>string-join('#')"/>
+        <xsl:attribute name="fill-signature" select="$fill-signature"/>
+        <!-- numeric format -->
+        <xsl:attribute name="numeric-format" select="$style('numeric-format')"/>
+        <xsl:variable name="numeric-format-signature" select="($style('numeric-format'))=>string-join('#')"/>
+        <xsl:attribute name="numeric-format-signature" select="$numeric-format-signature"/>
+        <!-- style signature -->
+        <xsl:attribute name="style-signature" select="($border-signature,$font-signature,$fill-signature,$numeric-format-signature)=>string-join(';')"/>
+      </xsl:if>
+      <xsl:apply-templates select="element()" mode="#current"/>
     </xsl:copy>
   </xsl:template>
-  
-  <xd:doc>
-    <xd:desc>
-      <xd:p></xd:p>
-    </xd:desc>
-  </xd:doc>
-  <xsl:template match="s:style" mode="soox:spreadsheet-styles-cascade"/>
-  
   
   
   <xd:doc>
@@ -98,38 +108,29 @@
   <xsl:function name="soox:cascade-style">
     <xsl:param name="inherited" as="map(*)"/>
     <xsl:param name="local" as="element(s:style)*"/>
-    
-    
+      
     <xsl:if test="$local">
-    <xsl:variable name="from-border" as="map(*)*">
-      <xsl:apply-templates select="$local/@border" mode="soox:spreadsheet-styles-cascade"/>  
-    </xsl:variable>
-    <xsl:variable name="from-border-stylecolor" as="map(*)*">
-      <xsl:apply-templates select="($local/@border-color,$local/@border-style)" mode="soox:spreadsheet-styles-cascade"/>
-    </xsl:variable>
-    <xsl:variable name="from-border-detailed" as="map(*)">
-      <xsl:map>
-        <xsl:apply-templates mode="soox:spreadsheet-styles-cascade" select="(
-          $local/@border-left-style,$local/@border-right-style,$local/@border-top-style,$local/@border-bottom-style,
-          $local/@border-left-color,$local/@border-right-color,$local/@border-top-color,$local/@border-bottom-color)"/>
-      </xsl:map>
-    </xsl:variable>
-    <xsl:sequence select="map:merge(($inherited,$from-border,$from-border-stylecolor,$from-border-detailed),map{'duplicates':'use-last'})"/>
+      <xsl:variable name="from-border" as="map(*)*">
+        <xsl:apply-templates select="$local/@border" mode="soox:spreadsheet-styles-cascade"/>  
+      </xsl:variable>
+      <xsl:variable name="from-border-stylecolor" as="map(*)*">
+        <xsl:apply-templates select="($local/@border-color,$local/@border-style)" mode="soox:spreadsheet-styles-cascade"/>
+      </xsl:variable>
+      <xsl:variable name="from-border-detailed" as="map(*)">
+        <xsl:map>
+          <xsl:apply-templates mode="soox:spreadsheet-styles-cascade" select="(
+            $local/@border-left-style,$local/@border-right-style,$local/@border-top-style,$local/@border-bottom-style,
+            $local/@border-left-color,$local/@border-right-color,$local/@border-top-color,$local/@border-bottom-color,
+            $local/@font-family,$local/@font-size,$local/@font-style,$local/@font-weight)"/>
+        </xsl:map>
+      </xsl:variable>
+      <xsl:sequence select="map:merge(($inherited=>soox:cascade-fill-style($local),$from-border,$from-border-stylecolor,$from-border-detailed),map{'duplicates':'use-last'})"/>
     </xsl:if>
     <xsl:if test="not($local)">
       <xsl:sequence select="$inherited"/>
     </xsl:if>
   </xsl:function>
   
-  
-  <!--xsl:template match="s:style" mode="soox:spreadsheet-styles-cascade">
-    <xsl:apply-templates select="@border" mode="#current"/>
-    <xsl:apply-templates select="(@border-color,@border-style)" mode="#current"/>
-    <xsl:copy-of select="(
-      @border-style-left,@border-style-right,@border-style-top,@border-style-bottom,
-      @border-color-left,@border-color-right,@border-color-top,@border-color-bottom)"/>
-  </xsl:template-->
-    
   
   <xd:doc>
     <xd:desc>
@@ -306,30 +307,39 @@
   </xd:doc>
   <xsl:function name="soox:styles.xml" visibility="public" as="map(*)">
     <xsl:param name="simple_workbook" as="element(s:workbook)"/>
-    
-    
-    <xsl:variable name="content">
-      <xsl:variable name="simple_workbook-cascaded">
-        <xsl:apply-templates select="$simple_workbook" mode="soox:spreadsheet-styles-cascade">
-          <xsl:with-param name="default-style" as="map(*)" tunnel="yes" 
-            select="$default-cell-style"/>
-        </xsl:apply-templates>
-      </xsl:variable>
       
-      <xsl:variable name="cellStyles" select="$simple_workbook-cascaded//s:cell/s:style" as="element(s:style)*"/>
+    <xsl:variable name="content">
+      <xsl:variable name="cellStyles" select="$simple_workbook//s:cell/s:style" as="element(s:style)*"/>
+      
+      <!-- Generates a map {"font-signature": sml:font element} -->
+      <xsl:variable name="fontsTablemap" as="map(xs:string,element(sml:font))"
+        select="soox:buildFontStyleMap($cellStyles)"/>
+      
+      <!-- Generates a map {"fill-signature": sml:fill element} -->
+      <xsl:variable name="fillsTablemap" as="map(xs:string,element(sml:fill))"
+        select="soox:buildFillStyleMap($cellStyles)"/>
+      
+      <!-- Generates a map {"border-signature": sml:border element} --> 
+      <xsl:variable name="bordersTablemap" as="map(xs:string,element(sml:border))"
+        select="soox:buildBorderStyleMap($cellStyles)"/>
+      
+      <!-- Generates a map {"numeric-format-signature": sml:numFmt element} -->
+      <xsl:variable name="numericFormatTableMap" as="map(xs:string,xs:integer)"
+        select="soox:buildNumFmtMap($cellStyles)"/>
+      
       <sml:styleSheet>
         
         <!-- Generate the numeric format table -->
-        <xsl:sequence select="soox:numeric-formats-table($cellStyles)"/>
+        <xsl:sequence select="soox:numeric-formats-table($numericFormatTableMap)"/>
         
         <!-- Generate the fonts table -->
-        <xsl:sequence select="soox:fonts-table($cellStyles)"/>
+        <xsl:sequence select="soox:fonts-table($fontsTablemap)"/>
         
         <!-- Generate the fills table -->
-        <xsl:sequence select="soox:fills-table($cellStyles)"/>
+        <xsl:sequence select="soox:fills-table($fillsTablemap)"/>
         
         <!-- Generate the borders table -->
-        <xsl:sequence select="soox:borders-table($cellStyles)"/>
+        <xsl:sequence select="soox:borders-table($bordersTablemap)"/>
         
         <!-- Generate the cellStyleXfs table -->
         <!-- cellStyleXfs -->
@@ -400,7 +410,7 @@
         </sml:cellStyleXfs-->
         
         <xsl:variable name="cellStylesTable" as="element(sml:xf)*"
-          select="soox:computeStyleCellXfsTable($cellStyles)"/>
+          select="soox:computeStyleCellXfsTable($cellStyles,$fontsTablemap,$fillsTablemap,$bordersTablemap,$numericFormatTableMap)"/>
         <sml:cellXfs count="{1 + $cellStylesTable=>count()}">
           <sml:xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="false"
             applyBorder="false" applyAlignment="false" applyProtection="false">
@@ -473,9 +483,9 @@
     <xsl:param name="style" as="element(s:style)?"/>
     
     <xsl:sequence select="map{
-      'font':soox:font-signature($style),
-      'fill':soox:fill-signature($style),
-      'border':soox:border-signature($style),
+      'font':$style/@font-signature,
+      'fill':$style/@fill-signature,
+      'border':$style/@border-signature,
       'numeric-format':soox:numeric-format-signature($style)
       }=>serialize(map{'method':'adaptive'})"/>
   </xsl:function>
@@ -547,6 +557,10 @@
   </xd:doc>
   <xsl:function name="soox:computeStyleCellXfsTable" as="element(sml:xf)*">
     <xsl:param name="styles" as="element(s:style)*"/>
+    <xsl:param name="fontsTablemap" as="map(xs:string,element(sml:font))"/>
+    <xsl:param name="fillsTablemap" as="map(xs:string,element(sml:fill))"/>
+    <xsl:param name="bordersTablemap" as="map(xs:string,element(sml:border))"/>
+    <xsl:param name="numericFormatTableMap" as="map(xs:string,xs:integer)"/>
   
     <!--xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="false"
       applyBorder="false" applyAlignment="false" applyProtection="false">
@@ -564,10 +578,10 @@
       <xsl:variable name="style" select="current-group()[1]"/>
       
       <sml:xf>
-        <xsl:attribute name="numFmtId" select="soox:buildNumFmtMap($styles)=>soox:numeric-format-index-of(soox:numeric-format-signature($style))"/>
-        <xsl:attribute name="fontId" select="soox:buildFontStyleMap($styles)=>soox:font-index-of(soox:font-signature($style))"/>
-        <xsl:attribute name="fillId" select="soox:buildFillStyleMap($styles)=>soox:fill-index-of(soox:fill-signature($style))"/>
-        <xsl:attribute name="borderId" select="soox:buildBorderStyleMap($styles)=>soox:border-index-of(soox:border-signature($style))"/>
+        <xsl:attribute name="numFmtId" select="$numericFormatTableMap=>soox:numeric-format-index-of(soox:numeric-format-signature($style))"/>
+        <xsl:attribute name="fontId" select="$fontsTablemap=>soox:font-index-of($style/@font-signature)"/>
+        <xsl:attribute name="fillId" select="$fillsTablemap=>soox:index-of($style/@fill-signature)"/>
+        <xsl:attribute name="borderId" select="$bordersTablemap=>soox:border-index-of($style/@border-signature)"/>
         <!--xsl:attribute name="xfId" select="(0)[1]"/-->
         <xsl:attribute name="applyFont" select="'true'"/>
         <xsl:attribute name="applyBorder" select="'true'"/>
@@ -592,6 +606,16 @@
     'border-right-color' : 'black',
     'border-top-color'   : 'black',
     'border-bottom-color': 'black'
+    },map {
+    'font-family' : 'Arial',
+    'font-size'   : 12,
+    'font-weight' : 'normal',
+    'font-style'  : 'normal'
+    },map {
+    'fill-style' : 'none',
+    'fill-color'   : 'black'
+    },map {
+    'numeric-format' : 'General'
     }))"/>
   
 </xsl:stylesheet>

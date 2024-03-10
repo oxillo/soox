@@ -18,6 +18,65 @@
         </xd:desc>
     </xd:doc>
     
+    
+    <xd:doc>
+        <xd:desc>
+            <xd:p></xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:template match="@fill-style" mode="soox:spreadsheet-styles-cascade">
+        <xsl:map-entry key="'fill-style'" select="."/>
+        <xsl:if test="data()='none'">
+            <xsl:map-entry key="'fill-color'" select="soox:parse-color('black','invalid')"/>
+        </xsl:if>
+    </xsl:template>
+    
+    <xsl:template match="@fill-color" mode="soox:spreadsheet-styles-cascade">
+        <xsl:variable name="color" select="soox:parse-color(.,'invalid')"/>
+        <xsl:if test="$color ne 'invalid'">
+           <xsl:map-entry key="'fill-style'">solid</xsl:map-entry>
+           <xsl:map-entry key="'fill-color'" select="$color"/>
+        </xsl:if>
+    </xsl:template>
+    
+    <xsl:template match="@fill" mode="soox:spreadsheet-styles-cascade">
+        <xsl:variable name="tokens" select="normalize-space()=>tokenize(' ')"/>
+        <xsl:map-entry key="'fill-style'" select="$tokens[1]"/>
+        <xsl:if test="$tokens[2] and $tokens[1] ne 'none'">
+            <xsl:variable name="color" select="soox:parse-color(.,'invalid')"/>
+            <xsl:if test="$color ne 'invalid'">
+                <xsl:map-entry key="'fill-color'" select="$color"/>
+            </xsl:if>
+        </xsl:if>
+        <xsl:if test="$tokens[1] = 'none'">
+            <xsl:map-entry key="'fill-color'" select="soox:parse-color('black','invalid')"/>
+        </xsl:if>
+    </xsl:template>
+    
+    
+    <xsl:function name="soox:cascade-fill-style">
+        <xsl:param name="inherited" as="map(*)"/>
+        <xsl:param name="local" as="element(s:style)"/>
+        
+        
+        <xsl:variable name="from-fill" as="map(*)*">
+            <xsl:map>
+                <xsl:apply-templates select="$local/@fill" mode="soox:spreadsheet-styles-cascade"/>
+            </xsl:map>
+        </xsl:variable>
+        <xsl:variable name="from-fill-color" as="map(*)*">
+            <xsl:map>
+                <xsl:apply-templates select="$local/@fill-color" mode="soox:spreadsheet-styles-cascade"/>
+            </xsl:map>
+        </xsl:variable>
+        <xsl:variable name="from-fill-style" as="map(*)">
+            <xsl:map>
+                <xsl:apply-templates select="$local/@fill-style" mode="soox:spreadsheet-styles-cascade"/>
+            </xsl:map>
+        </xsl:variable>
+        <xsl:sequence select="map:merge(($inherited,$from-fill,$from-fill-color,$from-fill-style),map{'duplicates':'use-last'})"/>
+    </xsl:function>
+    
     <xd:doc>
         <xd:desc>
             <xd:p>Generate the signature string for the cell fill style</xd:p>
@@ -28,19 +87,7 @@
     <xsl:function name="soox:fill-signature" as="xs:string">
         <xsl:param name="style" as="element(s:style)?"/>
         
-        <xsl:variable name="fill-tokens" select="$style/@fill=>normalize-space()=>tokenize(' ')"/>
-        <xsl:variable name="solid-fill" as="xs:string?"
-            select="if ($style/@fill-color and not($style/@fill-style)) then 'solid' else ()"/>
-        <xsl:variable name="fill-style" select="($style/@fill-style, $solid-fill, $fill-tokens[1],'none')[1]" as="xs:string"/>
-        <xsl:variable name="fill-color" select="if ($fill-style = 'none') then () else ($style/@fill-color, $fill-tokens[2],'black')[1]" as="xs:string*"/>
-        <xsl:choose>
-            <xsl:when test="$fill-style ne 'none'">
-                <xsl:sequence select="$fill-style||'#'||soox:parse-color(($style/@fill-color, $fill-tokens[2],'black')[1])"/>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:sequence select="$fill-style"/>
-            </xsl:otherwise>
-        </xsl:choose>
+        <xsl:sequence select="$style/@fill-signature"/>
     </xsl:function>
     
     
@@ -57,7 +104,7 @@
         
         <xsl:map>
             <!-- get the fill items from their unique signature -->
-            <xsl:for-each-group select="($default-fill,$styles)" group-by="soox:fill-signature(.)">
+            <xsl:for-each-group select="($default-fill,$styles)" group-by="xs:string(@fill-signature)">
                 <xsl:sort order="ascending"/>
                 
                 
@@ -103,6 +150,13 @@
         <xsl:sequence select="if($matching) then $matching[1] else 0"/>
     </xsl:function>
     
+    <xsl:function name="soox:index-of" as="xs:integer">
+        <xsl:param name="styles" as="map(xs:string,element())"/>
+        <xsl:param name="signature" as="xs:string"/>
+        
+        <xsl:sequence select="map:keys($styles)=>index-of($signature) - 1"/>
+    </xsl:function>
+    
     
     <xd:doc>
         <xd:desc>
@@ -112,11 +166,8 @@
         <xd:return>a border table inside a borders element</xd:return>
     </xd:doc>
     <xsl:function name="soox:fills-table" as="element(sml:fills)">
-        <xsl:param name="cellStyles" as="element(s:style)*"/>
+        <xsl:param name="fillsTablemap" as="map(xs:string,element(sml:fill))"/>
         
-        <!-- Generates a map {"fill-signature": sml:fill element} -->
-        <xsl:variable name="fillsTablemap" as="map(xs:string,element(sml:fill))"
-            select="soox:buildFillStyleMap($cellStyles)"/>
         
         <!-- Generates a fills element containing fill elements; first element should be the default one -->
         <sml:fills count="{count(map:keys($fillsTablemap))}">
@@ -138,7 +189,7 @@
     </xsl:variable>
     
     <xsl:variable name="default-fill-signature" as="xs:string"
-        select="$default-fill=>soox:fill-signature()"/>
+        select="'none'"/>
         
     
     <xd:doc>

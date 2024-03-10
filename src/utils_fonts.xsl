@@ -21,6 +21,31 @@
     <xsl:include href="utils_colors.xsl"/>
     
     
+    
+    <xd:doc>
+        <xd:desc>
+            <xd:p></xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:template match="@font-family" mode="soox:spreadsheet-styles-cascade">
+        <xsl:map-entry key="local-name()" select="."/>
+    </xsl:template>
+    
+    <xsl:template match="@font-size" mode="soox:spreadsheet-styles-cascade">
+        <xsl:map-entry key="local-name()" select="."/>
+    </xsl:template>
+    
+    <xsl:template match="@font-style" mode="soox:spreadsheet-styles-cascade">
+        <xsl:if test="data()=('normal','italic')">
+            <xsl:map-entry key="local-name()" select="."/>    
+        </xsl:if>
+        <!--xsl:message expand-text="true">Invalid font style specification &quot;{$style/@font-style}&quot;</xsl:message-->
+    </xsl:template>
+    
+    <xsl:template match="@font-weight" mode="soox:spreadsheet-styles-cascade">
+        <xsl:map-entry key="local-name()" select="."/>
+    </xsl:template>
+    
     <xd:doc>
         <xd:desc>
             <xd:p>Generates a 'style' element with detailed font attributes from a style with the shortened 'font' attrinbute</xd:p>
@@ -49,16 +74,16 @@
         <xd:return>A string that is the font-family</xd:return>
     </xd:doc>
     <xsl:function name="soox:get-font-family" as="xs:string">
-        <xsl:param name="style" as="element(s:style)?"/>
+        <xsl:param name="style" as="element(s:style)"/>
                 
-        <xsl:sequence select="($style/@font-family,soox:font-from-short-attribute($style)/@font-family,$default-font/@font-family)[1]"/>
+        <xsl:sequence select="$style/@font-family"/>
     </xsl:function>
         
     <xd:doc>
         <xd:desc>
             <xd:p>Return the font-size using by priority order : 
                 <xd:ul>
-                    <xd:li>the 'font-size' attribute value</xd:li>
+                    <xd:li>the 'font-size' a33ttribute value</xd:li>
                     <xd:li>the size specified in the 'font' attribute</xd:li>
                     <xd:li>the default font-size</xd:li>
                 </xd:ul></xd:p>
@@ -67,9 +92,9 @@
         <xd:return>A string that is the font-size</xd:return>
     </xd:doc>
     <xsl:function name="soox:get-font-size" as="xs:string">
-        <xsl:param name="style" as="element(s:style)?"/>
+        <xsl:param name="style" as="element(s:style)"/>
         
-        <xsl:sequence select="($style/@font-size,soox:font-from-short-attribute($style)/@font-size,$default-font/@font-size)[1]"/>
+        <xsl:sequence select="$style/@font-size"/>
     </xsl:function>
     
     <xd:doc>
@@ -85,9 +110,9 @@
         <xd:return>A string that is the font-weight</xd:return>
     </xd:doc>
     <xsl:function name="soox:get-font-weight" as="xs:string">
-        <xsl:param name="style" as="element(s:style)?"/>
+        <xsl:param name="style" as="element(s:style)"/>
         
-        <xsl:sequence select="($style/@font-weight,soox:font-from-short-attribute($style)/@font-weight,$default-font/@font-weight)[1]"/>
+        <xsl:sequence select="$style/@font-weight"/>
     </xsl:function>
     
     <xd:doc>
@@ -103,34 +128,15 @@
         <xd:return>A string that is the font-style</xd:return>
     </xd:doc>
     <xsl:function name="soox:get-font-style" as="xs:string">
-        <xsl:param name="style" as="element(s:style)?"/>
+        <xsl:param name="style" as="element(s:style)"/>
         
         <xsl:if test="not(index-of(('normal','italic',''),$style/@font-style||''))">
             <xsl:message expand-text="true">Invalid font style specification &quot;{$style/@font-style}&quot;</xsl:message>
         </xsl:if>
-        <xsl:sequence select="($style/@font-style,soox:font-from-short-attribute($style)/@font-style,$default-font/@font-style)[1]"/>
+        <xsl:sequence select="$style/@font-style"/>
     </xsl:function>
     
     
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Generate the signature string for the cell font style</xd:p>
-        </xd:desc>
-        <xd:param name="style">the cell style</xd:param>
-        <xd:return>a string that uniquely identifies the font style</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:font-signature" as="xs:string">
-        <xsl:param name="style" as="element(s:style)?"/>
-        
-        <xsl:sequence select="if ($style) then 
-                map{
-                'family':soox:get-font-family($style),
-                'size':soox:get-font-size($style),
-                'weight':soox:get-font-weight($style),
-                'style':soox:get-font-style($style)
-                }=>serialize(map{'method':'adaptive'}) 
-            else $default-font-signature"/>
-    </xsl:function>
     
     
     <xd:doc>
@@ -145,20 +151,21 @@
         <xsl:param name="styles" as="element(s:style)*"/>
         
         <xsl:map>
-            <xsl:for-each-group select="($default-font,$styles)" group-by="soox:font-signature(.)">
+            <xsl:for-each-group select="$styles" group-by="xs:string(@font-signature)">
                 <xsl:map-entry key="current-grouping-key()">
-                    <xsl:variable name="font-style" select="current-group()[1]"/>
+                    <!-- Tokenize the font-signature to get in this order : family, size, weight and style -->
+                    <xsl:variable name="font-style" select="current-grouping-key()=>tokenize('#')"/>
                     <sml:font>
-                        <sml:sz val="{soox:get-font-size($font-style)}"/>
+                        <sml:sz val="{$font-style[2]}"/>
                         <!--sml:color rgb="FF000000"/-->
-                        <sml:name val="{soox:get-font-family($font-style)}"/>
+                        <sml:name val="{$font-style[1]}"/>
                         <!--sml:family val="2"/>
                         <sml:charset val="238"/-->
-                        <xsl:if test="soox:get-font-weight($font-style) = 'bold'">
+                        <xsl:if test="$font-style[3] = 'bold'">
                             <sml:b/>
                         </xsl:if>
                         <xsl:choose>
-                            <xsl:when test="soox:get-font-style($font-style) = 'italic'">
+                            <xsl:when test="$font-style[4] = 'italic'">
                                 <sml:i/>
                             </xsl:when>
                             <xsl:otherwise/>
@@ -192,15 +199,11 @@
         <xd:desc>
             <xd:p>Generates a table for all unique font styles</xd:p>
         </xd:desc>
-        <xd:param name="cellStyles">a sequence of all cell styles</xd:param>
+        <xd:param name="fontsTablemap">a map of sml:font</xd:param>
         <xd:return>a font table inside a fonts element</xd:return>
     </xd:doc>
     <xsl:function name="soox:fonts-table" as="element(sml:fonts)">
-        <xsl:param name="cellStyles" as="element(s:style)*"/>
-        
-        <!-- Generates a map {"font-signature": sml:font element} -->
-        <xsl:variable name="fontsTablemap" as="map(xs:string,element(sml:font))"
-            select="soox:buildFontStyleMap($cellStyles)"/>
+        <xsl:param name="fontsTablemap" as="map(xs:string,element(sml:font))"/>
         
         <!-- Generates a fonts element containing font elements; first element should be the default one -->
         <sml:fonts count="{count(map:keys($fontsTablemap))}">
@@ -211,22 +214,14 @@
             </xsl:for-each>
         </sml:fonts>
     </xsl:function>
-    
-    <xd:doc>
-        <xd:desc>
-            <xd:p>The default font specification</xd:p>
-        </xd:desc>
-    </xd:doc>
-    <xsl:variable name="default-font" as="element(s:style)">
-        <s:style font-family="Arial" font-size="12" font-weight="normal" font-style="normal"/>
-    </xsl:variable>
-    
+   
+   
     <xd:doc>
         <xd:desc>
             <xd:p>The default font signature</xd:p>
         </xd:desc>
     </xd:doc>
     <xsl:variable name="default-font-signature" as="xs:string"
-        select="$default-font=>soox:font-signature()"/>
+        select="($default-cell-style('font-family'),$default-cell-style('font-size'),$default-cell-style('font-weight'),$default-cell-style('font-style'))=>string-join('#')"/>
     
 </xsl:stylesheet>

@@ -21,86 +21,6 @@
     
     
     
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Return the left border using by priority order : 
-            <xd:ul>
-                <xd:li>the 'border-left-*' attributes value</xd:li>
-                <xd:li>the values from in the 'border-left' attribute</xd:li>
-                <xd:li>the values from in the 'border' attribute</xd:li>
-                <xd:li>the default values (no border, width=1, color=black)</xd:li>
-            </xd:ul></xd:p>
-        </xd:desc>
-        <xd:param name="style">A SOOX 'style' element</xd:param>
-        <xd:return>A string that is the border specification</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:border-left" as="xs:string">
-        <xsl:param name="style" as="element(s:style)?"/>
-        <xsl:param name="expanded-style" as="element(s:style)?"/>
-        
-        <xsl:sequence select="if ($style/@border-left-style='none') then 'none' else $style/@border-left-style||'#'||$style/@border-left-color"/>
-    </xsl:function>
-    
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Return the right border using by priority order : 
-                <xd:ul>
-                    <xd:li>the 'border-right-*' attributes value</xd:li>
-                    <xd:li>the values from in the 'border-right' attribute</xd:li>
-                    <xd:li>the values from in the 'border' attribute</xd:li>
-                    <xd:li>the default values (no border, width=1, color=black)</xd:li>
-                </xd:ul></xd:p>
-        </xd:desc>
-        <xd:param name="style">A SOOX 'style' element</xd:param>
-        <xd:return>A string that is the border specification</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:border-right" as="xs:string">
-        <xsl:param name="style" as="element(s:style)?"/>
-        <xsl:param name="expanded-style" as="element(s:style)?"/>
-        
-        <xsl:sequence select="if ($style/@border-right-style='none') then 'none' else $style/@border-right-style||'#'||$style/@border-right-color"/>
-    </xsl:function>
-    
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Return the top border using by priority order : 
-                <xd:ul>
-                    <xd:li>the 'border-top-*' attributes value</xd:li>
-                    <xd:li>the values from in the 'border-top' attribute</xd:li>
-                    <xd:li>the values from in the 'border' attribute</xd:li>
-                    <xd:li>the default values (no border, width=1, color=black)</xd:li>
-                </xd:ul></xd:p>
-        </xd:desc>
-        <xd:param name="style">A SOOX 'style' element</xd:param>
-        <xd:return>A string that is the border specification</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:border-top" as="xs:string">
-        <xsl:param name="style" as="element(s:style)?"/>
-        <xsl:param name="expanded-style" as="element(s:style)?"/>
-        
-        <xsl:sequence select="if ($style/@border-top-style='none') then 'none' else $style/@border-top-style||'#'||$style/@border-top-color"/>
-    </xsl:function>
-    
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Return the bottom border using by priority order : 
-                <xd:ul>
-                    <xd:li>the 'border-bottom-*' attributes value</xd:li>
-                    <xd:li>the values from in the 'border-bottom' attribute</xd:li>
-                    <xd:li>the values from in the 'border' attribute</xd:li>
-                    <xd:li>the default values (no border, width=1, color=black)</xd:li>
-                </xd:ul></xd:p>
-        </xd:desc>
-        <xd:param name="style">A SOOX 'style' element</xd:param>
-        <xd:return>A string that is the border specification</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:border-bottom" as="xs:string">
-        <xsl:param name="style" as="element(s:style)?"/>
-        <xsl:param name="expanded-style" as="element(s:style)?"/>
-        
-        <xsl:sequence select="if ($style/@border-bottom-style='none') then 'none' else $style/@border-bottom-style||'#'||$style/@border-bottom-color"/>
-    </xsl:function>
-    
     
     <xd:doc>
         <xd:desc>
@@ -112,15 +32,7 @@
     <xsl:function name="soox:border-signature" as="xs:string">
         <xsl:param name="style" as="element(s:style)?"/>
         
-        <xsl:variable name="expanded-style" select="$style"/>
-        <xsl:sequence select="if ($style) then 
-                map{
-                'left':soox:border-left($style,$expanded-style),
-                'right':soox:border-right($style,$expanded-style),
-                'top':soox:border-top($style,$expanded-style),
-                'bottom':soox:border-bottom($style,$expanded-style)
-                }=>serialize(map{'method':'adaptive'}) 
-                else soox:border-signature($default-border)"/>
+        <xsl:sequence select="$style/@border-signature"/>
     </xsl:function>
     
     
@@ -135,37 +47,35 @@
         <xsl:param name="styles" as="element(s:style)*"/>
         
         <xsl:map>
-            <xsl:for-each-group select="($default-border,$styles)" group-by="soox:border-signature(.)">
+            <xsl:for-each-group select="($default-border,$styles)" group-by="xs:string(@border-signature)">
                 <xsl:map-entry key="current-grouping-key()">
-                    <xsl:variable name="border-style" select="current-group()[1]"/>
-                    <xsl:variable name="expanded-style" select="$border-style"/>
-                    <sml:border>
+                    <!-- Tokenize the border-signature to get in this order : [1]left-style, left-color, [3]right-style, right-color,
+                        [5]top-style,top-color, [7]bottom-style, bottom-color -->
+                    <xsl:variable name="border-style" select="current-grouping-key()=>tokenize('#')"/>
+                    
+                   <sml:border>
                         <sml:left>
-                            <xsl:variable name="args" select="soox:border-left($border-style,$expanded-style)=>tokenize('#')"/>
-                            <xsl:if test="$args[1] ne 'none'">
-                                <xsl:attribute name="style" select="$args[1]"/>
-                                <sml:color rgb="{$args[2]}"/>
+                            <xsl:if test="$border-style[1] ne 'none'">
+                                <xsl:attribute name="style" select="$border-style[1]"/>
+                                <sml:color rgb="{$border-style[2]}"/>
                             </xsl:if>
                         </sml:left>
                         <sml:right>
-                            <xsl:variable name="args" select="soox:border-right($border-style,$expanded-style)=>tokenize('#')"/>
-                            <xsl:if test="$args[1] ne 'none'">
-                                <xsl:attribute name="style" select="$args[1]"/>
-                                <sml:color rgb="{$args[2]}"/>
+                            <xsl:if test="$border-style[3] ne 'none'">
+                                <xsl:attribute name="style" select="$border-style[3]"/>
+                                <sml:color rgb="{$border-style[4]}"/>
                             </xsl:if>
                         </sml:right>
                         <sml:top>
-                            <xsl:variable name="args" select="soox:border-top($border-style,$expanded-style)=>tokenize('#')"/>
-                            <xsl:if test="$args[1] ne 'none'">
-                                <xsl:attribute name="style" select="$args[1]"/>
-                                <sml:color rgb="{$args[2]}"/>
+                            <xsl:if test="$border-style[5] ne 'none'">
+                                <xsl:attribute name="style" select="$border-style[5]"/>
+                                <sml:color rgb="{$border-style[6]}"/>
                             </xsl:if>
                         </sml:top>
                         <sml:bottom>
-                            <xsl:variable name="args" select="soox:border-bottom($border-style,$expanded-style)=>tokenize('#')"/>
-                            <xsl:if test="$args[1] ne 'none'">
-                                <xsl:attribute name="style" select="$args[1]"/>
-                                <sml:color rgb="{$args[2]}"/>
+                            <xsl:if test="$border-style[7] ne 'none'">
+                                <xsl:attribute name="style" select="$border-style[7]"/>
+                                <sml:color rgb="{$border-style[8]}"/>
                             </xsl:if>
                         </sml:bottom>
                     </sml:border>
@@ -201,16 +111,12 @@
         <xd:return>a border table inside a borders element</xd:return>
     </xd:doc>
     <xsl:function name="soox:borders-table" as="element(sml:borders)">
-        <xsl:param name="cellStyles" as="element(s:style)*"/>
-        
-        <!-- Generates a map {"border-signature": sml:border element} --> 
-        <xsl:variable name="bordersTablemap" as="map(xs:string,element(sml:border))"
-            select="soox:buildBorderStyleMap($cellStyles)"/>
+        <xsl:param name="bordersTablemap" as="map(xs:string,element(sml:border))"/>
         
         <!-- Generates a borders element containing border elements; first element should be the default one -->
         <sml:borders count="{1 + count(map:keys($bordersTablemap))}">
             
-            <xsl:variable name="default-border-signature" select="$default-border=>soox:border-signature()"/>
+            <xsl:variable name="default-border-signature" select="$default-border/@border-signature"/>
             <xsl:sequence select="$bordersTablemap($default-border-signature)"/>
             <xsl:for-each select="map:keys($bordersTablemap)[. ne $default-border-signature]">
                 <xsl:sequence select="$bordersTablemap(current())"/>
@@ -225,7 +131,7 @@
     </xd:doc>
     <xsl:variable name="default-border" as="element(s:style)">
         <s:style border-left-style="none" border-right-style="none" border-top-style="none" border-bottom-style="none"
-            border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black"/>
+            border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black" border-signature="none#black#none#black#none#black#none#black"/>
     </xsl:variable>
     
     <xsl:variable name="borders-styles" as="xs:string+"

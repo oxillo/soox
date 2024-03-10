@@ -19,14 +19,14 @@
     </xd:doc>
     
     <xsl:function name="soox:numeric-formats-table" as="element(sml:numFmts)?">
-        <xsl:param name="cellStyles" as="element(s:style)*"/>
+        <xsl:param name="numericFormatTableMap" as="map(xs:string,xs:integer)"/>
+        
         
         <!-- build the list of custom formats -->
         <xsl:variable name="numFmts" as="element(sml:numFmt)*">
-            <xsl:variable name="m" select="soox:buildNumFmtMap($cellStyles)"/>
-            <xsl:for-each select="map:keys($m)">
-                <xsl:if test="not($m(current()) = map:keys($soox:default-numeric-formats))">
-                    <sml:numFmt numFmtId="{$m(current())}" formatCode="{current()}"/>
+            <xsl:for-each select="map:keys($numericFormatTableMap)">
+                <xsl:if test="not($numericFormatTableMap(current()) = map:keys($soox:default-numeric-formats))">
+                    <sml:numFmt numFmtId="{$numericFormatTableMap(current())}" formatCode="{current()}"/>
                 </xsl:if>
             </xsl:for-each>
         </xsl:variable>
