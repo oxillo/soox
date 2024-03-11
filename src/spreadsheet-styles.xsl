@@ -482,12 +482,7 @@
   <xsl:function name="soox:styleSignature" as="xs:string">
     <xsl:param name="style" as="element(s:style)?"/>
     
-    <xsl:sequence select="map{
-      'font':$style/@font-signature,
-      'fill':$style/@fill-signature,
-      'border':$style/@border-signature,
-      'numeric-format':soox:numeric-format-signature($style)
-      }=>serialize(map{'method':'adaptive'})"/>
+    <xsl:sequence select="$style/@style-signature"/>
   </xsl:function>
   
   
@@ -507,13 +502,13 @@
     <xd:param name="signature">the signature string of the element to find</xd:param>
     <xd:return>The style element that matches the signature string</xd:return>
   </xd:doc>
-  <xsl:function name="soox:getStyleFromSignature" as="element(s:style)?">
+  <!--xsl:function name="soox:getStyleFromSignature" as="element(s:style)?">
     <xsl:param name="styles" as="element(s:style)*"/>
     <xsl:param name="signature" as="xs:string"/>
     
     <xsl:variable name="matchingStyles" select="$styles[soox:styleSignature(.)=$signature]"/>
     <xsl:sequence select="$matchingStyles[1]"/>  
-  </xsl:function>
+  </xsl:function-->
   
   
   
@@ -536,7 +531,7 @@
     <xsl:param name="styles" as="element(s:style)*"/>
     
     <xsl:map>
-      <xsl:for-each-group select="$styles" group-by="soox:styleSignature(.)">
+      <xsl:for-each-group select="$styles" group-by="xs:string(@style-signature)">
         <xsl:sort order="ascending"/>
         <xsl:map-entry key="current-grouping-key()" select="position()"/>
       </xsl:for-each-group>
@@ -574,14 +569,13 @@
         indent="0" shrinkToFit="false"/>
       <protection locked="true" hidden="false"/>
     </xf-->
-    <xsl:for-each-group select="$styles" group-by="soox:styleSignature(.)">
-      <xsl:variable name="style" select="current-group()[1]"/>
-      
+    <xsl:for-each-group select="$styles" group-by="xs:string(@style-signature)">
+      <xsl:variable name="tokens" select="current-grouping-key()=>tokenize(';')"/>
       <sml:xf>
-        <xsl:attribute name="numFmtId" select="$numericFormatTableMap=>soox:numeric-format-index-of(soox:numeric-format-signature($style))"/>
-        <xsl:attribute name="fontId" select="$fontsTablemap=>soox:font-index-of($style/@font-signature)"/>
-        <xsl:attribute name="fillId" select="$fillsTablemap=>soox:index-of($style/@fill-signature)"/>
-        <xsl:attribute name="borderId" select="$bordersTablemap=>soox:border-index-of($style/@border-signature)"/>
+        <xsl:attribute name="borderId" select="$bordersTablemap=>soox:index-of($tokens[1])"/>
+        <xsl:attribute name="fontId" select="$fontsTablemap=>soox:index-of($tokens[2])"/>
+        <xsl:attribute name="fillId" select="$fillsTablemap=>soox:index-of($tokens[3])"/>
+        <xsl:attribute name="numFmtId" select="$numericFormatTableMap=>soox:numeric-format-index-of($tokens[4])"/>
         <!--xsl:attribute name="xfId" select="(0)[1]"/-->
         <xsl:attribute name="applyFont" select="'true'"/>
         <xsl:attribute name="applyBorder" select="'true'"/>

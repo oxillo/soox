@@ -218,7 +218,7 @@
     
     <xsl:element name="c" _namespace="{$ns-sml}">
       <xsl:attribute name="r" select="soox:encode-cell-address(@col,@row)"/>
-      <xsl:variable name="styleIndex" select="$cell-styles-map(soox:styleSignature(s:style))"/>
+      <xsl:variable name="styleIndex" select="$cell-styles-map(s:style/@style-signature)"/>
       <xsl:choose>
         <xsl:when test="s:style">
           <xsl:attribute name="s" select="$styleIndex"/>
