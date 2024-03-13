@@ -26,6 +26,28 @@
         <xd:desc>
             <xd:p></xd:p>
         </xd:desc>
+        <xd:param name="inherited"></xd:param>
+        <xd:param name="local"></xd:param>
+    </xd:doc>
+    <xsl:function name="soox:cascade-font-style">
+        <xsl:param name="inherited" as="map(*)"/>
+        <xsl:param name="local" as="element(s:style)"/>
+        
+        
+        <xsl:variable name="from-detailed" as="map(*)">
+            <xsl:map>
+                <xsl:apply-templates mode="soox:spreadsheet-styles-cascade" select="(
+                    $local/@font-family,$local/@font-size,$local/@font-style,$local/@font-weight)"/>
+            </xsl:map>
+        </xsl:variable>
+        <xsl:sequence select="map:merge(($inherited,$from-detailed),map{'duplicates':'use-last'})"/>
+    </xsl:function>
+    
+    
+    <xd:doc>
+        <xd:desc>
+            <xd:p></xd:p>
+        </xd:desc>
     </xd:doc>
     <xsl:template match="@font-family" mode="soox:spreadsheet-styles-cascade">
         <xsl:map-entry key="local-name()" select="."/>

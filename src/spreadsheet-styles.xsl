@@ -30,17 +30,80 @@
   
   <xd:doc>
     <xd:desc>
-      <xd:p></xd:p>
+      <xd:p>For workbook and worksheets having a <style/> element,
+        compute the new style (cascade) and apply it on dowstream elements.</xd:p>
+      <xd:p>Rewrite element to remove attributes from <style/> element.</xd:p>
     </xd:desc>
-    <xd:param name="style"></xd:param>
+    <xd:param name="inherited-style">The default style for workbook or the cascaded workbook style for worksheets</xd:param>
   </xd:doc>
-  <xsl:template match="s:workbook|s:worksheet|s:cell" mode="soox:spreadsheet-styles-cascade">
-    <xsl:param name="style" tunnel="yes"/>
+  <xsl:template match="s:workbook[s:style]|s:worksheet[s:style]" mode="soox:spreadsheet-styles-cascade">
+    <xsl:param name="inherited-style" tunnel="yes"/>
     
     <xsl:copy>
       <xsl:copy-of select="@*"/>
-      <xsl:apply-templates mode="#current" select="element()">
-        <xsl:with-param name="style" select="soox:cascade-style($style,s:style)" tunnel="yes"/>
+      <s:style>
+        <xsl:apply-templates select="s:style/node()" mode="#current"/>
+      </s:style>
+      <xsl:apply-templates mode="#current" select="*[not(self::s:style)]">
+        <xsl:with-param name="inherited-style" select="soox:cascade-style($inherited-style,s:style)" tunnel="yes"/>
+      </xsl:apply-templates>
+    </xsl:copy>
+  </xsl:template>
+  
+  <xd:doc>
+    <xd:desc>
+      <xd:p>Cascade <style/> to <b>all</b> cell elements.</xd:p>
+      <xd:p>(Re)write <style/> element to hold <b>all</b> style attributes with short notation expanded.</xd:p>
+      <xd:p>compute and add style signatures to the <style/> element.</xd:p>
+    </xd:desc>
+    <xd:param name="inherited-style">The inherited style from worksheet</xd:param>
+  </xd:doc>
+  <xsl:template match="s:cell" mode="soox:spreadsheet-styles-cascade">
+    <xsl:param name="inherited-style" tunnel="yes"/>
+    
+    <xsl:variable name="cascaded-style" select="if (s:style) then soox:cascade-style($inherited-style,s:style) else $inherited-style"/>
+    <xsl:copy>
+      <xsl:copy-of select="@*"/>
+      <!-- Write the <style/> element with all attributes; computes signatures -->
+      <s:style>
+        <!-- border style -->
+        <xsl:attribute name="border-left-style" select="$cascaded-style('border-left-style')"/>  
+        <xsl:attribute name="border-right-style" select="$cascaded-style('border-right-style')"/>
+        <xsl:attribute name="border-top-style" select="$cascaded-style('border-top-style')"/>
+        <xsl:attribute name="border-bottom-style" select="$cascaded-style('border-bottom-style')"/>
+        <!-- border color -->
+        <xsl:attribute name="border-left-color" select="$cascaded-style('border-left-color')"/>  
+        <xsl:attribute name="border-right-color" select="$cascaded-style('border-right-color')"/>
+        <xsl:attribute name="border-top-color" select="$cascaded-style('border-top-color')"/>
+        <xsl:attribute name="border-bottom-color" select="$cascaded-style('border-bottom-color')"/>
+        <xsl:variable name="border-signature" select="(
+          $cascaded-style('border-left-style'),$cascaded-style('border-left-color'),
+          $cascaded-style('border-right-style'),$cascaded-style('border-right-color'),
+          $cascaded-style('border-top-style'),$cascaded-style('border-top-color'),
+          $cascaded-style('border-bottom-style'),$cascaded-style('border-bottom-color'))=>string-join('#')"/>
+        <xsl:attribute name="border-signature" select="$border-signature"/>
+        <!-- font -->
+        <xsl:attribute name="font-family" select="$cascaded-style('font-family')"/>
+        <xsl:attribute name="font-size" select="$cascaded-style('font-size')"/>
+        <xsl:attribute name="font-weight" select="$cascaded-style('font-weight')"/>
+        <xsl:attribute name="font-style" select="$cascaded-style('font-style')"/>
+        <xsl:variable name="font-signature" select="($cascaded-style('font-family'),$cascaded-style('font-size'),$cascaded-style('font-weight'),$cascaded-style('font-style'))=>string-join('#')"/>
+        <xsl:attribute name="font-signature" select="$font-signature"/> 
+        <!-- fill -->
+        <xsl:attribute name="fill-style" select="$cascaded-style('fill-style')"/>
+        <xsl:attribute name="fill-color" select="$cascaded-style('fill-color')"/>
+        <xsl:variable name="fill-signature" select="($cascaded-style('fill-style'),$cascaded-style('fill-color'))=>string-join('#')"/>
+        <xsl:attribute name="fill-signature" select="$fill-signature"/>
+        <!-- numeric format -->
+        <xsl:attribute name="numeric-format" select="$cascaded-style('numeric-format')"/>
+        <xsl:variable name="numeric-format-signature" select="($cascaded-style('numeric-format'))=>string-join('#')"/>
+        <xsl:attribute name="numeric-format-signature" select="$numeric-format-signature"/>
+        <!-- style signature -->
+        <xsl:attribute name="style-signature" select="($border-signature,$font-signature,$fill-signature,$numeric-format-signature)=>string-join(';')"/>
+        <xsl:apply-templates select="s:style/node()" mode="#current"/>
+      </s:style>
+      <xsl:apply-templates mode="#current" select="*[not(self::s:style)]">
+        <xsl:with-param name="inherited-style" select="$cascaded-style" tunnel="yes"/>
       </xsl:apply-templates>
     </xsl:copy>
   </xsl:template>
@@ -48,55 +111,11 @@
   
   <xd:doc>
     <xd:desc>
-      <xd:p>Rewrite s:style element to remove style attributes that should have been cascaded (workbook and worksheet)
-        and to output final style sttributes (after style cascade) for cells</xd:p>
+      <xd:p>Ignore the <style/> element as it is explicitly rewritten in other templates</xd:p>
     </xd:desc>
-    <xd:param name="style">A map holding the cell style after style cascading (workbook->worksheet->cell) </xd:param>
   </xd:doc>
-  <xsl:template match="s:style" mode="soox:spreadsheet-styles-cascade">
-    <xsl:param name="style" as="map(*)" tunnel="yes"/>
+  <xsl:template match="s:style" mode="soox:spreadsheet-styles-cascade"/>
     
-    <xsl:copy>
-      <xsl:if test="parent::s:cell">
-        <!-- border style -->
-        <xsl:attribute name="border-left-style" select="$style('border-left-style')"/>  
-        <xsl:attribute name="border-right-style" select="$style('border-right-style')"/>
-        <xsl:attribute name="border-top-style" select="$style('border-top-style')"/>
-        <xsl:attribute name="border-bottom-style" select="$style('border-bottom-style')"/>
-        <!-- border color -->
-        <xsl:attribute name="border-left-color" select="$style('border-left-color')"/>  
-        <xsl:attribute name="border-right-color" select="$style('border-right-color')"/>
-        <xsl:attribute name="border-top-color" select="$style('border-top-color')"/>
-        <xsl:attribute name="border-bottom-color" select="$style('border-bottom-color')"/>
-        <xsl:variable name="border-signature" select="(
-          $style('border-left-style'),$style('border-left-color'),
-          $style('border-right-style'),$style('border-right-color'),
-          $style('border-top-style'),$style('border-top-color'),
-          $style('border-bottom-style'),$style('border-bottom-color'))=>string-join('#')"/>
-        <xsl:attribute name="border-signature" select="$border-signature"/>
-        <!-- font -->
-        <xsl:attribute name="font-family" select="$style('font-family')"/>
-        <xsl:attribute name="font-size" select="$style('font-size')"/>
-        <xsl:attribute name="font-weight" select="$style('font-weight')"/>
-        <xsl:attribute name="font-style" select="$style('font-style')"/>
-        <xsl:variable name="font-signature" select="($style('font-family'),$style('font-size'),$style('font-weight'),$style('font-style'))=>string-join('#')"/>
-        <xsl:attribute name="font-signature" select="$font-signature"/> 
-        <!-- fill -->
-        <xsl:attribute name="fill-style" select="$style('fill-style')"/>
-        <xsl:attribute name="fill-color" select="$style('fill-color')"/>
-        <xsl:variable name="fill-signature" select="($style('fill-style'),$style('fill-color'))=>string-join('#')"/>
-        <xsl:attribute name="fill-signature" select="$fill-signature"/>
-        <!-- numeric format -->
-        <xsl:attribute name="numeric-format" select="$style('numeric-format')"/>
-        <xsl:variable name="numeric-format-signature" select="($style('numeric-format'))=>string-join('#')"/>
-        <xsl:attribute name="numeric-format-signature" select="$numeric-format-signature"/>
-        <!-- style signature -->
-        <xsl:attribute name="style-signature" select="($border-signature,$font-signature,$fill-signature,$numeric-format-signature)=>string-join(';')"/>
-      </xsl:if>
-      <xsl:apply-templates select="element()" mode="#current"/>
-    </xsl:copy>
-  </xsl:template>
-  
   
   <xd:doc>
     <xd:desc>
@@ -107,197 +126,15 @@
   </xd:doc>
   <xsl:function name="soox:cascade-style">
     <xsl:param name="inherited" as="map(*)"/>
-    <xsl:param name="local" as="element(s:style)*"/>
+    <xsl:param name="local" as="element(s:style)"/>
       
-    <xsl:if test="$local">
-      <xsl:variable name="from-border" as="map(*)*">
-        <xsl:apply-templates select="$local/@border" mode="soox:spreadsheet-styles-cascade"/>  
-      </xsl:variable>
-      <xsl:variable name="from-border-stylecolor" as="map(*)*">
-        <xsl:apply-templates select="($local/@border-color,$local/@border-style)" mode="soox:spreadsheet-styles-cascade"/>
-      </xsl:variable>
-      <xsl:variable name="from-border-detailed" as="map(*)">
-        <xsl:map>
-          <xsl:apply-templates mode="soox:spreadsheet-styles-cascade" select="(
-            $local/@border-left-style,$local/@border-right-style,$local/@border-top-style,$local/@border-bottom-style,
-            $local/@border-left-color,$local/@border-right-color,$local/@border-top-color,$local/@border-bottom-color,
-            $local/@font-family,$local/@font-size,$local/@font-style,$local/@font-weight)"/>
-        </xsl:map>
-      </xsl:variable>
-      <xsl:sequence select="map:merge(($inherited=>soox:cascade-fill-style($local),$from-border,$from-border-stylecolor,$from-border-detailed),map{'duplicates':'use-last'})"/>
-    </xsl:if>
-    <xsl:if test="not($local)">
-      <xsl:sequence select="$inherited"/>
-    </xsl:if>
+    <xsl:sequence select="$inherited=>
+      soox:cascade-border-style($local)=>
+      soox:cascade-fill-style($local)=>
+      soox:cascade-font-style($local)"/>
   </xsl:function>
   
   
-  <xd:doc>
-    <xd:desc>
-      <xd:p></xd:p>
-    </xd:desc>
-  </xd:doc>
-  <xsl:template match="@border" mode="soox:spreadsheet-styles-cascade">
-    <xsl:variable name="tokens" select="normalize-space(.)=>tokenize(' ')"/>
-    
-    <xsl:map>
-      <xsl:if test="$tokens[1]=$borders-styles">
-        <xsl:map-entry key="'border-left-style'" select="$tokens[1]"/>
-        <xsl:map-entry key="'border-right-style'" select="$tokens[1]"/>
-        <xsl:map-entry key="'border-top-style'" select="$tokens[1]"/>
-        <xsl:map-entry key="'border-bottom-style'" select="$tokens[1]"/>
-      </xsl:if>
-      
-      <xsl:if test="$tokens[2]">
-        <xsl:variable name="parsed-color" select="soox:parse-color($tokens[2],'invalid')"/>
-        <xsl:if test="$parsed-color ne 'invalid'">
-          <xsl:map-entry key="'border-left-color'" select="$parsed-color"/>
-          <xsl:map-entry key="'border-right-color'" select="$parsed-color"/>
-          <xsl:map-entry key="'border-top-color'" select="$parsed-color"/>
-          <xsl:map-entry key="'border-bottom-color'" select="$parsed-color"/>
-        </xsl:if>
-      </xsl:if>
-    </xsl:map>
-  </xsl:template>
-  
-  <xd:doc>
-    <xd:desc>
-      <xd:p></xd:p>
-    </xd:desc>
-  </xd:doc>
-  <xsl:template match="@border-color" mode="soox:spreadsheet-styles-cascade">
-    <xsl:variable name="tokens" select="(normalize-space(.)=>tokenize(' '))!soox:parse-color(.,'invalid')"/>
-    
-    <xsl:map>
-      <xsl:choose>
-        <xsl:when test="count($tokens)=1">
-          <xsl:if test="$tokens[1] ne 'invalid'">
-            <xsl:map-entry key="'border-left-color'" select="$tokens[1]"/>
-            <xsl:map-entry key="'border-right-color'" select="$tokens[1]"/>
-            <xsl:map-entry key="'border-top-color'" select="$tokens[1]"/>
-            <xsl:map-entry key="'border-bottom-color'" select="$tokens[1]"/>
-          </xsl:if>
-        </xsl:when>
-        <xsl:when test="count($tokens)=2">
-          <xsl:if test="$tokens[1] ne 'invalid'">
-            <xsl:map-entry key="'border-top-color'" select="$tokens[1]"/>
-            <xsl:map-entry key="'border-bottom-color'" select="$tokens[1]"/>
-          </xsl:if>
-          <xsl:if test="$tokens[2] ne 'invalid'">
-            <xsl:map-entry key="'border-left-color'" select="$tokens[2]"/>
-            <xsl:map-entry key="'border-right-color'" select="$tokens[2]"/>
-          </xsl:if>
-        </xsl:when>
-        <xsl:when test="count($tokens)=3">
-          <xsl:if test="$tokens[1] ne 'invalid'">
-            <xsl:map-entry key="'border-top-color'" select="$tokens[1]"/>
-          </xsl:if>
-          <xsl:if test="$tokens[2] ne 'invalid'">
-            <xsl:map-entry key="'border-left-color'" select="$tokens[2]"/>
-            <xsl:map-entry key="'border-right-color'" select="$tokens[2]"/>
-          </xsl:if>
-          <xsl:if test="$tokens[3] ne 'invalid'">
-            <xsl:map-entry key="'border-bottom-color'" select="$tokens[3]"/>
-          </xsl:if>
-        </xsl:when>
-        <xsl:when test="count($tokens)=4">
-          <xsl:if test="$tokens[1] ne 'invalid'">
-            <xsl:map-entry key="'border-top-color'" select="$tokens[1]"/>
-          </xsl:if>
-          <xsl:if test="$tokens[2] ne 'invalid'">
-            <xsl:map-entry key="'border-right-color'" select="$tokens[2]"/>
-          </xsl:if>
-          <xsl:if test="$tokens[3] ne 'invalid'">
-            <xsl:map-entry key="'border-bottom-color'" select="$tokens[3]"/>
-          </xsl:if>
-          <xsl:if test="$tokens[4] ne 'invalid'">
-            <xsl:map-entry key="'border-left-color'" select="$tokens[4]"/>
-          </xsl:if>
-        </xsl:when>
-        <xsl:otherwise/>
-      </xsl:choose>
-    </xsl:map>
-  </xsl:template>
-  
-  <xd:doc>
-    <xd:desc>
-      <xd:p></xd:p>
-    </xd:desc>
-  </xd:doc>
-  <xsl:template match="@border-style" mode="soox:spreadsheet-styles-cascade">
-    <xsl:variable name="tokens" select="normalize-space(.)=>tokenize(' ')"/>
-    
-    <xsl:map>
-      <xsl:choose>
-        <xsl:when test="count($tokens)=1">
-          <xsl:if test="$tokens[1]=$borders-styles">
-            <xsl:map-entry key="'border-left-style'" select="$tokens[1]"/>
-            <xsl:map-entry key="'border-right-style'" select="$tokens[1]"/>
-            <xsl:map-entry key="'border-top-style'" select="$tokens[1]"/>
-            <xsl:map-entry key="'border-bottom-style'" select="$tokens[1]"/>
-          </xsl:if>
-        </xsl:when>
-        <xsl:when test="count($tokens)=2">
-          <xsl:if test="$tokens[1]=$borders-styles">
-            <xsl:map-entry key="'border-top-style'" select="$tokens[1]"/>
-            <xsl:map-entry key="'border-bottom-style'" select="$tokens[1]"/>
-          </xsl:if>
-          <xsl:if test="$tokens[2]=$borders-styles">
-            <xsl:map-entry key="'border-left-style'" select="$tokens[2]"/>
-            <xsl:map-entry key="'border-right-style'" select="$tokens[2]"/>
-          </xsl:if>
-        </xsl:when>
-        <xsl:when test="count($tokens)=3">
-          <xsl:if test="$tokens[1]=$borders-styles">
-            <xsl:map-entry key="'border-top-style'" select="$tokens[1]"/>
-          </xsl:if>
-          <xsl:if test="$tokens[2]=$borders-styles">
-            <xsl:map-entry key="'border-left-style'" select="$tokens[2]"/>
-            <xsl:map-entry key="'border-right-style'" select="$tokens[2]"/>
-          </xsl:if>
-          <xsl:if test="$tokens[3]=$borders-styles">
-            <xsl:map-entry key="'border-bottom-style'" select="$tokens[3]"/>
-          </xsl:if>
-        </xsl:when>
-        <xsl:when test="count($tokens)=4">
-          <xsl:if test="$tokens[1]=$borders-styles">
-            <xsl:map-entry key="'border-top-style'" select="$tokens[1]"/>
-          </xsl:if>
-          <xsl:if test="$tokens[2]=$borders-styles">
-            <xsl:map-entry key="'border-right-style'" select="$tokens[2]"/>
-          </xsl:if>
-          <xsl:if test="$tokens[3]=$borders-styles">
-            <xsl:map-entry key="'border-bottom-style'" select="$tokens[3]"/>
-          </xsl:if>
-          <xsl:if test="$tokens[4]=$borders-styles">
-            <xsl:map-entry key="'border-left-style'" select="$tokens[4]"/>
-          </xsl:if>
-        </xsl:when>
-        <xsl:otherwise/>
-      </xsl:choose>
-    </xsl:map>
-  </xsl:template>
-  
-  <xd:doc>
-    <xd:desc>
-      <xd:p></xd:p>
-    </xd:desc>
-  </xd:doc>
-  <xsl:template match="@border-left-style|@border-right-style|@border-top-style|@border-bottom-style" mode="soox:spreadsheet-styles-cascade">
-    <xsl:map-entry key="local-name()" select="."/>
-  </xsl:template>
-  
-  <xd:doc>
-    <xd:desc>
-      <xd:p></xd:p>
-    </xd:desc>
-  </xd:doc>
-  <xsl:template match="@border-left-color|@border-right-color|@border-top-color|@border-bottom-color" mode="soox:spreadsheet-styles-cascade">
-    <xsl:variable name="parsed-color" select="soox:parse-color(data(),'invalid')"/>
-    <xsl:if test="$parsed-color ne 'invalid'">
-      <xsl:map-entry key="local-name()" select="$parsed-color"/>  
-    </xsl:if>
-  </xsl:template>
   
   <xd:doc>
     <xd:desc>
@@ -469,46 +306,9 @@
       'relationship-type': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles'
       }"/>
   </xsl:function>
-  
-  
-  <xd:doc>
-    <xd:desc>
-      <xd:p>Generate a signature that uniquely identifies this style.</xd:p>
-      <xd:p>If 2 style element have the same signature, they are considered to define the same style even if their XML content is different</xd:p>
-    </xd:desc>
-    <xd:param name="style">a style element</xd:param>
-    <xd:return>a signature string</xd:return>
-  </xd:doc>
-  <xsl:function name="soox:styleSignature" as="xs:string">
-    <xsl:param name="style" as="element(s:style)?"/>
     
-    <xsl:sequence select="$style/@style-signature"/>
-  </xsl:function>
   
   
-  
-  
-  
-  
-  
-  
-  
-  <xd:doc>
-    <xd:desc>
-      <xd:p>Retrieve a style element from a style elements sequence based on its signature</xd:p>
-      <xd:p>If multiple elements match, the first one is returned; if no element match, the empty sequence is returned</xd:p>
-    </xd:desc>
-    <xd:param name="styles">a sequence of style elements</xd:param>
-    <xd:param name="signature">the signature string of the element to find</xd:param>
-    <xd:return>The style element that matches the signature string</xd:return>
-  </xd:doc>
-  <!--xsl:function name="soox:getStyleFromSignature" as="element(s:style)?">
-    <xsl:param name="styles" as="element(s:style)*"/>
-    <xsl:param name="signature" as="xs:string"/>
-    
-    <xsl:variable name="matchingStyles" select="$styles[soox:styleSignature(.)=$signature]"/>
-    <xsl:sequence select="$matchingStyles[1]"/>  
-  </xsl:function-->
   
   
   
@@ -569,8 +369,8 @@
         indent="0" shrinkToFit="false"/>
       <protection locked="true" hidden="false"/>
     </xf-->
-    <xsl:for-each-group select="$styles" group-by="xs:string(@style-signature)">
-      <xsl:variable name="tokens" select="current-grouping-key()=>tokenize(';')"/>
+    <xsl:for-each select="distinct-values($styles/@style-signature)">
+      <xsl:variable name="tokens" select="current()=>tokenize(';')"/>
       <sml:xf>
         <xsl:attribute name="borderId" select="$bordersTablemap=>soox:index-of($tokens[1])"/>
         <xsl:attribute name="fontId" select="$fontsTablemap=>soox:index-of($tokens[2])"/>
@@ -585,7 +385,7 @@
           indent="0" shrinkToFit="false"/>
         <protection locked="true" hidden="false"/-->
       </sml:xf>
-    </xsl:for-each-group>
+    </xsl:for-each>
   </xsl:function>
   
   
@@ -596,10 +396,10 @@
     'border-top-style'   : 'none',
     'border-bottom-style': 'none'
     },map {
-    'border-left-color'  : 'black',
-    'border-right-color' : 'black',
-    'border-top-color'   : 'black',
-    'border-bottom-color': 'black'
+    'border-left-color'  : soox:parse-color('black','invalid'),
+    'border-right-color' : soox:parse-color('black','invalid'),
+    'border-top-color'   : soox:parse-color('black','invalid'),
+    'border-bottom-color': soox:parse-color('black','invalid')
     },map {
     'font-family' : 'Arial',
     'font-size'   : 12,
@@ -607,7 +407,7 @@
     'font-style'  : 'normal'
     },map {
     'fill-style' : 'none',
-    'fill-color'   : 'black'
+    'fill-color'   : soox:parse-color('black','invalid')
     },map {
     'numeric-format' : 'General'
     }))"/>

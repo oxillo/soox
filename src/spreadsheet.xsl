@@ -92,7 +92,7 @@
         <!-- do style cascading in order that every cell has *all* style attributes (ex: @border-style expanded to @border-*-style -->
         <xsl:variable name="wbk" as="element()">
             <xsl:apply-templates select="$elem" mode="soox:spreadsheet-styles-cascade">
-                <xsl:with-param name="style" tunnel="yes" select="$default-cell-style"/>
+                <xsl:with-param name="inherited-style" tunnel="yes" select="$default-cell-style"/>
             </xsl:apply-templates>
         </xsl:variable>
         
