@@ -157,7 +157,7 @@
         select="soox:buildFillStyleMap($cellStyles)"/>
       
       <!-- Generates a map {"border-signature": sml:border element} --> 
-      <xsl:variable name="bordersTablemap" as="map(xs:string,element(sml:border))"
+      <xsl:variable name="bordersTablemap" as="xs:string*"
         select="soox:buildBorderStyleMap($cellStyles)"/>
       
       <!-- Generates a map {"numeric-format-signature": sml:numFmt element} -->
@@ -355,7 +355,7 @@
     <xsl:param name="styles" as="element(s:style)*"/>
     <xsl:param name="fontsTablemap" as="map(xs:string,element(sml:font))"/>
     <xsl:param name="fillsTablemap" as="map(xs:string,element(sml:fill))"/>
-    <xsl:param name="bordersTablemap" as="map(xs:string,element(sml:border))"/>
+    <xsl:param name="borderSignatures" as="xs:string*"/>
     <xsl:param name="numericFormatTableMap" as="map(xs:string,xs:integer)"/>
   
     <!--xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="false"
@@ -370,7 +370,6 @@
         indent="0" shrinkToFit="false"/>
       <protection locked="true" hidden="false"/>
     </xf-->
-    <xsl:variable name="borderSignatures" select="map:keys($bordersTablemap)=>sort()"/>
     <xsl:variable name="fontSignatures" select="map:keys($fontsTablemap)=>sort()"/>
     <xsl:variable name="fillSignatures" select="map:keys($fillsTablemap)=>sort()"/>
     <xsl:for-each select="distinct-values($styles/@style-signature)">

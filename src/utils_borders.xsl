@@ -237,46 +237,10 @@
         <xd:param name="styles">SOOX cell styles</xd:param>
         <xd:return>A map that associates the border signature with the generated OOXML font element</xd:return>
     </xd:doc>
-    <xsl:function name="soox:buildBorderStyleMap" as="map(xs:string,element(sml:border))">
+    <xsl:function name="soox:buildBorderStyleMap" as="xs:string*">
         <xsl:param name="styles" as="element(s:style)*"/>
         
-        <xsl:map>
-            <xsl:for-each-group select="($styles)" group-by="xs:string(@border-signature)">
-                
-                <xsl:map-entry key="current-grouping-key()">
-                    <!-- Tokenize the border-signature to get in this order : [1]left-style, left-color, [3]right-style, right-color,
-                        [5]top-style,top-color, [7]bottom-style, bottom-color -->
-                    <xsl:variable name="border-style" select="current-grouping-key()=>tokenize('#')"/>
-                    
-                    <sml:border>
-                        <sml:left>
-                            <xsl:if test="$border-style[1] ne 'none'">
-                                <xsl:attribute name="style" select="$border-style[1]"/>
-                                <sml:color rgb="{$border-style[2]}"/>
-                            </xsl:if>
-                        </sml:left>
-                        <sml:right>
-                            <xsl:if test="$border-style[3] ne 'none'">
-                                <xsl:attribute name="style" select="$border-style[3]"/>
-                                <sml:color rgb="{$border-style[4]}"/>
-                            </xsl:if>
-                        </sml:right>
-                        <sml:top>
-                            <xsl:if test="$border-style[5] ne 'none'">
-                                <xsl:attribute name="style" select="$border-style[5]"/>
-                                <sml:color rgb="{$border-style[6]}"/>
-                            </xsl:if>
-                        </sml:top>
-                        <sml:bottom>
-                            <xsl:if test="$border-style[7] ne 'none'">
-                                <xsl:attribute name="style" select="$border-style[7]"/>
-                                <sml:color rgb="{$border-style[8]}"/>
-                            </xsl:if>
-                        </sml:bottom>
-                    </sml:border>
-                </xsl:map-entry>
-            </xsl:for-each-group>
-        </xsl:map>
+        <xsl:sequence select="distinct-values($styles/@border-signature)=>sort()"/>
     </xsl:function>
     
     
@@ -288,12 +252,40 @@
         <xd:return>a border table inside a borders element</xd:return>
     </xd:doc>
     <xsl:function name="soox:borders-table" as="element(sml:borders)">
-        <xsl:param name="bordersTablemap" as="map(xs:string,element(sml:border))"/>
+        <xsl:param name="signatures" as="xs:string*"/>
         
         <!-- Generates a borders element containing border elements; first element should be the default one -->
-        <sml:borders count="{count(map:keys($bordersTablemap))}">
-            <xsl:for-each select="map:keys($bordersTablemap)=>sort()">
-                <xsl:sequence select="$bordersTablemap(current())"/>
+        <sml:borders count="{count($signatures)}">
+            <xsl:for-each select="$signatures">
+                <!-- Tokenize the border-signature to get in this order : [1]left-style, left-color, [3]right-style, right-color,
+                        [5]top-style,top-color, [7]bottom-style, bottom-color -->
+                <xsl:variable name="border-style" select="current()=>tokenize('#')"/>
+                <sml:border>
+                    <sml:left>
+                        <xsl:if test="$border-style[1] ne 'none'">
+                            <xsl:attribute name="style" select="$border-style[1]"/>
+                            <sml:color rgb="{$border-style[2]}"/>
+                        </xsl:if>
+                    </sml:left>
+                    <sml:right>
+                        <xsl:if test="$border-style[3] ne 'none'">
+                            <xsl:attribute name="style" select="$border-style[3]"/>
+                            <sml:color rgb="{$border-style[4]}"/>
+                        </xsl:if>
+                    </sml:right>
+                    <sml:top>
+                        <xsl:if test="$border-style[5] ne 'none'">
+                            <xsl:attribute name="style" select="$border-style[5]"/>
+                            <sml:color rgb="{$border-style[6]}"/>
+                        </xsl:if>
+                    </sml:top>
+                    <sml:bottom>
+                        <xsl:if test="$border-style[7] ne 'none'">
+                            <xsl:attribute name="style" select="$border-style[7]"/>
+                            <sml:color rgb="{$border-style[8]}"/>
+                        </xsl:if>
+                    </sml:bottom>
+                </sml:border>
             </xsl:for-each>
         </sml:borders>
     </xsl:function>
