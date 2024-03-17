@@ -68,95 +68,7 @@
         <xsl:map-entry key="local-name()" select="."/>
     </xsl:template>
     
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Generates a 'style' element with detailed font attributes from a style with the shortened 'font' attrinbute</xd:p>
-            <xd:p><![CDATA[<style font="12 'Arial'"/> generates <style font-family="Arial" font-size="12"/>]]></xd:p>
-        </xd:desc>
-        <xd:param name="style">A 'style' element</xd:param>
-        <xd:return>A 'style' element</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:font-from-short-attribute" as="element(s:style)">
-        <xsl:param name="style" as="element(s:style)"/>
-        
-        <!--TODO-->
-        <s:style/>
-    </xsl:function>
     
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Return the font-family using by priority order : 
-            <xd:ul>
-                <xd:li>the 'font-family' attribute value</xd:li>
-                <xd:li>the family specified in the 'font' attribute</xd:li>
-                <xd:li>the default font-family</xd:li>
-            </xd:ul></xd:p>
-        </xd:desc>
-        <xd:param name="style">A SOOX 'style' element</xd:param>
-        <xd:return>A string that is the font-family</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:get-font-family" as="xs:string">
-        <xsl:param name="style" as="element(s:style)"/>
-                
-        <xsl:sequence select="$style/@font-family"/>
-    </xsl:function>
-        
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Return the font-size using by priority order : 
-                <xd:ul>
-                    <xd:li>the 'font-size' a33ttribute value</xd:li>
-                    <xd:li>the size specified in the 'font' attribute</xd:li>
-                    <xd:li>the default font-size</xd:li>
-                </xd:ul></xd:p>
-        </xd:desc>
-        <xd:param name="style">A SOOX 'style' element</xd:param>
-        <xd:return>A string that is the font-size</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:get-font-size" as="xs:string">
-        <xsl:param name="style" as="element(s:style)"/>
-        
-        <xsl:sequence select="$style/@font-size"/>
-    </xsl:function>
-    
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Return the font-size using by priority order : 
-                <xd:ul>
-                    <xd:li>the 'font-weight' attribute value</xd:li>
-                    <xd:li>the weight specified in the 'font' attribute</xd:li>
-                    <xd:li>the default font-weight</xd:li>
-                </xd:ul></xd:p>
-        </xd:desc>
-        <xd:param name="style">A SOOX 'style' element</xd:param>
-        <xd:return>A string that is the font-weight</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:get-font-weight" as="xs:string">
-        <xsl:param name="style" as="element(s:style)"/>
-        
-        <xsl:sequence select="$style/@font-weight"/>
-    </xsl:function>
-    
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Return the font-style using by priority order : 
-                <xd:ul>
-                    <xd:li>the 'font-style' attribute value</xd:li>
-                    <xd:li>the style specified in the 'font' attribute</xd:li>
-                    <xd:li>the default font-style</xd:li>
-                </xd:ul></xd:p>
-        </xd:desc>
-        <xd:param name="style">A SOOX 'style' element</xd:param>
-        <xd:return>A string that is the font-style</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:get-font-style" as="xs:string">
-        <xsl:param name="style" as="element(s:style)"/>
-        
-        <xsl:if test="not(index-of(('normal','italic',''),$style/@font-style||''))">
-            <xsl:message expand-text="true">Invalid font style specification &quot;{$style/@font-style}&quot;</xsl:message>
-        </xsl:if>
-        <xsl:sequence select="$style/@font-style"/>
-    </xsl:function>
     
     
     
@@ -199,23 +111,6 @@
     </xsl:function>
     
     
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Returns the OOXML fill style index from a font style signature</xd:p>
-            <xd:p>The returned index is the position of the signature in the keys of the font styles map</xd:p>
-        </xd:desc>
-        <xd:param name="styles">A font styles map that associate a signature to a OOXML font element</xd:param>
-        <xd:param name="signature">The font style signature to find</xd:param>
-        <xd:return>The index of the matching signature or 0(=default font) if not found</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:font-index-of" as="xs:integer">
-        <xsl:param name="styles" as="map(xs:string,element(sml:font))"/>
-        <xsl:param name="signature" as="xs:string"/>
-        
-        <xsl:variable name="matching" as="xs:integer*"
-            select="(map:keys($styles)[. ne $default-font-signature])=>index-of($signature)"/>
-        <xsl:sequence select="if($matching) then $matching[1] else 0"/>
-    </xsl:function>
     
     <xd:doc>
         <xd:desc>
@@ -229,21 +124,12 @@
         
         <!-- Generates a fonts element containing font elements; first element should be the default one -->
         <sml:fonts count="{count(map:keys($fontsTablemap))}">
-            
-            <xsl:sequence select="$fontsTablemap($default-font-signature)"/>
-            <xsl:for-each select="map:keys($fontsTablemap)[. ne $default-font-signature]">
+            <xsl:for-each select="map:keys($fontsTablemap)">
+                <xsl:sort order="ascending" stable="yes"/>
                 <xsl:sequence select="$fontsTablemap(current())"/>
             </xsl:for-each>
         </sml:fonts>
     </xsl:function>
    
    
-    <xd:doc>
-        <xd:desc>
-            <xd:p>The default font signature</xd:p>
-        </xd:desc>
-    </xd:doc>
-    <xsl:variable name="default-font-signature" as="xs:string"
-        select="($default-cell-style('font-family'),$default-cell-style('font-size'),$default-cell-style('font-weight'),$default-cell-style('font-style'))=>string-join('#')"/>
-    
 </xsl:stylesheet>

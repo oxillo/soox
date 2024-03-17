@@ -77,18 +77,6 @@
         <xsl:sequence select="map:merge(($inherited,$from-fill,$from-fill-color,$from-fill-style),map{'duplicates':'use-last'})"/>
     </xsl:function>
     
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Generate the signature string for the cell fill style</xd:p>
-        </xd:desc>
-        <xd:param name="style">the cell style</xd:param>
-        <xd:return>a string that uniquely identifies the fill style</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:fill-signature" as="xs:string">
-        <xsl:param name="style" as="element(s:style)?"/>
-        
-        <xsl:sequence select="$style/@fill-signature"/>
-    </xsl:function>
     
     
     <xd:doc>
@@ -104,51 +92,32 @@
         
         <xsl:map>
             <!-- get the fill items from their unique signature -->
-            <xsl:for-each-group select="($default-fill,$styles)" group-by="xs:string(@fill-signature)">
-                <xsl:sort order="ascending"/>
+            <xsl:for-each-group select="($styles)" group-by="xs:string(@fill-signature)">
                 
-                
-                    <xsl:map-entry key="current-grouping-key()">
-                        <xsl:variable name="tokens" select="current-grouping-key()=>tokenize('#')"/>
-                        <xsl:choose>
-                            <xsl:when test="$tokens[1] ne 'none'">
-                                <sml:fill>
-                                    <sml:patternFill patternType="solid">
-                                        <sml:fgColor rgb="{$tokens[2]}"/>
-                                        <sml:bgColor rgb="{$tokens[2]}"/>
-                                    </sml:patternFill>
-                                </sml:fill>
-                            </xsl:when>
-                            <xsl:otherwise>
-                                <sml:fill>
-                                    <sml:patternFill patternType="none"/>
-                                </sml:fill>
-                                        
-                            </xsl:otherwise>
-                        </xsl:choose>
-                    </xsl:map-entry>
+                <xsl:map-entry key="current-grouping-key()">
+                    <xsl:variable name="tokens" select="current-grouping-key()=>tokenize('#')"/>
+                    <xsl:choose>
+                        <xsl:when test="$tokens[1] ne 'none'">
+                            <sml:fill>
+                                <sml:patternFill patternType="solid">
+                                    <sml:fgColor rgb="{$tokens[2]}"/>
+                                    <sml:bgColor rgb="{$tokens[2]}"/>
+                                </sml:patternFill>
+                            </sml:fill>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <sml:fill>
+                                <sml:patternFill patternType="none"/>
+                            </sml:fill>
+                                    
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:map-entry>
             </xsl:for-each-group>
         </xsl:map>
     </xsl:function>
     
     
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Returns the OOXML fill style index from a fill style signature</xd:p>
-            <xd:p>The returned index is the position of the signature in the keys of the fill styles map</xd:p>
-        </xd:desc>
-        <xd:param name="signature">The fill style signature to find</xd:param>
-        <xd:param name="styles">A fill styles map that associate a signature to a OOXML fill element</xd:param>
-        <xd:return>The index of the matching signature or 0(=no fill) if not found</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:fill-index-of" as="xs:integer">
-        <xsl:param name="styles" as="map(xs:string,element(sml:fill))"/>
-        <xsl:param name="signature" as="xs:string"/>
-        
-        <xsl:variable name="matching" as="xs:integer*"
-            select="(map:keys($styles)[. ne $default-fill-signature])=>index-of($signature)"/>
-        <xsl:sequence select="if($matching) then $matching[1] else 0"/>
-    </xsl:function>
     
     <xsl:function name="soox:index-of" as="xs:integer">
         <xsl:param name="styles" as="map(xs:string,element())"/>
@@ -169,27 +138,15 @@
         <xsl:param name="fillsTablemap" as="map(xs:string,element(sml:fill))"/>
         
         
-        <!-- Generates a fills element containing fill elements; first element should be the default one -->
+        <!-- Generates a fills element containing fill elements -->
         <sml:fills count="{count(map:keys($fillsTablemap))}">
-            
-            <xsl:sequence select="$fillsTablemap($default-fill-signature)"/>
-            <xsl:for-each select="map:keys($fillsTablemap)[. ne $default-fill-signature]">
+            <xsl:for-each select="map:keys($fillsTablemap)">
+                <xsl:sort order="ascending" stable="yes"/>
                 <xsl:sequence select="$fillsTablemap(current())"/>
             </xsl:for-each>
         </sml:fills>
     </xsl:function>
     
-    <xd:doc>
-        <xd:desc>
-            <xd:p>default fill specification</xd:p>
-        </xd:desc>
-    </xd:doc>
-    <xsl:variable name="default-fill" as="element(s:style)">
-        <s:style fill-style="none"/>
-    </xsl:variable>
-    
-    <xsl:variable name="default-fill-signature" as="xs:string"
-        select="'none'"/>
         
     
     <xd:doc>

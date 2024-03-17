@@ -52,7 +52,9 @@
     
     <xd:doc>
         <xd:desc>
-            <xd:p></xd:p>
+            <xd:p>Expand @border to a border styles map</xd:p>
+            <xd:p>The first word of @border attribute is the style of the border ('thin','none',...)</xd:p>
+            <xd:p>The second optional word of @border attribute is the color of the border ('green','blue',...)</xd:p>
         </xd:desc>
     </xd:doc>
     <xsl:template match="@border" mode="soox:spreadsheet-styles-cascade">
@@ -80,7 +82,11 @@
     
     <xd:doc>
         <xd:desc>
-            <xd:p></xd:p>
+            <xd:p>Expand @border-color to a border color map</xd:p>
+            <xd:p>A single value defines the color for all 4 borders</xd:p>
+            <xd:p>2 values define color for top/bottom and left/right</xd:p>
+            <xd:p>3 values define color for top, left/right and bottom</xd:p>
+            <xd:p>4 values define color for top, right, bottom and left</xd:p>
         </xd:desc>
     </xd:doc>
     <xsl:template match="@border-color" mode="soox:spreadsheet-styles-cascade">
@@ -139,7 +145,11 @@
     
     <xd:doc>
         <xd:desc>
-            <xd:p></xd:p>
+            <xd:p>Expand @border-style to a border style map</xd:p>
+            <xd:p>A single value defines the style for all 4 borders</xd:p>
+            <xd:p>2 values define style for top/bottom and left/right</xd:p>
+            <xd:p>3 values define style for top, left/right and bottom</xd:p>
+            <xd:p>4 values define style for top, right, bottom and left</xd:p>
         </xd:desc>
     </xd:doc>
     <xsl:template match="@border-style" mode="soox:spreadsheet-styles-cascade">
@@ -222,20 +232,6 @@
     
     <xd:doc>
         <xd:desc>
-            <xd:p>Generate the signature string for the cell borders style</xd:p>
-        </xd:desc>
-        <xd:param name="style">the cell style</xd:param>
-        <xd:return>a string that uniquely identifies the borders style</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:border-signature" as="xs:string">
-        <xsl:param name="style" as="element(s:style)?"/>
-        
-        <xsl:sequence select="$style/@border-signature"/>
-    </xsl:function>
-    
-    
-    <xd:doc>
-        <xd:desc>
             <xd:p>Build a map to associates the border signature to the generated OOXML border element</xd:p>
         </xd:desc>
         <xd:param name="styles">SOOX cell styles</xd:param>
@@ -245,13 +241,14 @@
         <xsl:param name="styles" as="element(s:style)*"/>
         
         <xsl:map>
-            <xsl:for-each-group select="($default-border,$styles)" group-by="xs:string(@border-signature)">
+            <xsl:for-each-group select="($styles)" group-by="xs:string(@border-signature)">
+                
                 <xsl:map-entry key="current-grouping-key()">
                     <!-- Tokenize the border-signature to get in this order : [1]left-style, left-color, [3]right-style, right-color,
                         [5]top-style,top-color, [7]bottom-style, bottom-color -->
                     <xsl:variable name="border-style" select="current-grouping-key()=>tokenize('#')"/>
                     
-                   <sml:border>
+                    <sml:border>
                         <sml:left>
                             <xsl:if test="$border-style[1] ne 'none'">
                                 <xsl:attribute name="style" select="$border-style[1]"/>
@@ -285,25 +282,9 @@
     
     <xd:doc>
         <xd:desc>
-            <xd:p>Returns the OOXML fill style index from a font style signature</xd:p>
-            <xd:p>The returned index is the position of the signature in the keys of the font styles map</xd:p>
-        </xd:desc>
-        <xd:param name="styles">A font styles map that associate a signature to a OOXML font element</xd:param>
-        <xd:param name="signature">The font style signature to find</xd:param>
-        <xd:return>The index of the matching signature or 0(=default font) if not found</xd:return>
-    </xd:doc>
-    <xsl:function name="soox:border-index-of" as="xs:integer">
-        <xsl:param name="styles" as="map(xs:string,element(sml:border))"/>
-        <xsl:param name="signature" as="xs:string"/>
-        
-        <xsl:sequence select="map:keys($styles)=>index-of($signature)"/>
-    </xsl:function>
-    
-    <xd:doc>
-        <xd:desc>
             <xd:p>Generates a table for all unique border styles</xd:p>
         </xd:desc>
-        <xd:param name="cellStyles">a sequence of all the cell styles</xd:param>
+        <xd:param name="bordersTablemap">a sequence of all the cell styles</xd:param>
         <xd:return>a border table inside a borders element</xd:return>
     </xd:doc>
     <xsl:function name="soox:borders-table" as="element(sml:borders)">
@@ -311,30 +292,20 @@
         
         <!-- Generates a borders element containing border elements; first element should be the default one -->
         <sml:borders count="{count(map:keys($bordersTablemap))}">
-            
-            <xsl:for-each select="map:keys($bordersTablemap)">
+            <xsl:for-each select="map:keys($bordersTablemap)=>sort()">
                 <xsl:sequence select="$bordersTablemap(current())"/>
             </xsl:for-each>
         </sml:borders>
     </xsl:function>
     
-    <xd:doc>
-        <xd:desc>
-            <xd:p>The default font specification</xd:p>
-        </xd:desc>
-    </xd:doc>
-    <xsl:variable name="default-border" as="element(s:style)">
-        <s:style border-left-style="none" border-right-style="none" border-top-style="none" border-bottom-style="none"
-            border-left-color="black" border-right-color="black" border-top-color="black" border-bottom-color="black" border-signature="none#black#none#black#none#black#none#black"/>
-    </xsl:variable>
     
     <xsl:variable name="borders-styles" as="xs:string+"
         select="('inherit','none','thin','medium','dashed','dotted','thick','double','hair',
         'mediumDashed','dashDot','mediumDashDot','dashDotDot','mediumDashDotDot','slantDashDot')"/>
     
-    <xsl:variable name="borders" select="('border-left-style','border-left-color',
+    <!--xsl:variable name="borders" select="('border-left-style','border-left-color',
         'border-right-style','border-right-color',
         'border-top-style','border-top-color',
-        'border-bottom-style','border-bottom-color')"/>
+        'border-bottom-style','border-bottom-color')"/-->
     
-</xsl:stylesheet>    
+</xsl:stylesheet>

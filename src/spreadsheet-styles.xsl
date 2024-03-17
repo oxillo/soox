@@ -96,10 +96,9 @@
         <xsl:attribute name="fill-signature" select="$fill-signature"/>
         <!-- numeric format -->
         <xsl:attribute name="numeric-format" select="$cascaded-style('numeric-format')"/>
-        <xsl:variable name="numeric-format-signature" select="($cascaded-style('numeric-format'))=>string-join('#')"/>
-        <xsl:attribute name="numeric-format-signature" select="$numeric-format-signature"/>
+        <xsl:attribute name="numeric-format-signature" select="$cascaded-style('numeric-format')"/>
         <!-- style signature -->
-        <xsl:attribute name="style-signature" select="($border-signature,$font-signature,$fill-signature,$numeric-format-signature)=>string-join(';')"/>
+        <xsl:attribute name="style-signature" select="($border-signature,$font-signature,$fill-signature,$cascaded-style('numeric-format'))=>string-join(';')"/>
         <xsl:apply-templates select="s:style/node()" mode="#current"/>
       </s:style>
       <xsl:apply-templates mode="#current" select="*[not(self::s:style)]">
@@ -131,7 +130,8 @@
     <xsl:sequence select="$inherited=>
       soox:cascade-border-style($local)=>
       soox:cascade-fill-style($local)=>
-      soox:cascade-font-style($local)"/>
+      soox:cascade-font-style($local)=>
+      soox:cascade-numeric-format($local)"/>
   </xsl:function>
   
   
@@ -340,14 +340,15 @@
   
  
   
-  
-  
-  
   <xd:doc>
     <xd:desc>
       <xd:p>Compute the table of unique cell styles</xd:p>
     </xd:desc>
     <xd:param name="styles">The sequence of styles defined in the workbook</xd:param>
+    <xd:param name="fontsTablemap"></xd:param>
+    <xd:param name="fillsTablemap"></xd:param>
+    <xd:param name="bordersTablemap"></xd:param>
+    <xd:param name="numericFormatTableMap"></xd:param>
     <xd:return>A sequence of xf elements</xd:return>
   </xd:doc>
   <xsl:function name="soox:computeStyleCellXfsTable" as="element(sml:xf)*">
@@ -369,13 +370,16 @@
         indent="0" shrinkToFit="false"/>
       <protection locked="true" hidden="false"/>
     </xf-->
+    <xsl:variable name="borderSignatures" select="map:keys($bordersTablemap)=>sort()"/>
+    <xsl:variable name="fontSignatures" select="map:keys($fontsTablemap)=>sort()"/>
+    <xsl:variable name="fillSignatures" select="map:keys($fillsTablemap)=>sort()"/>
     <xsl:for-each select="distinct-values($styles/@style-signature)">
       <xsl:variable name="tokens" select="current()=>tokenize(';')"/>
       <sml:xf>
-        <xsl:attribute name="borderId" select="$bordersTablemap=>soox:index-of($tokens[1])"/>
-        <xsl:attribute name="fontId" select="$fontsTablemap=>soox:index-of($tokens[2])"/>
-        <xsl:attribute name="fillId" select="$fillsTablemap=>soox:index-of($tokens[3])"/>
-        <xsl:attribute name="numFmtId" select="$numericFormatTableMap=>soox:numeric-format-index-of($tokens[4])"/>
+        <xsl:attribute name="borderId" select="$borderSignatures=>index-of($tokens[1]) - 1"/>
+        <xsl:attribute name="fontId" select="$fontSignatures=>index-of($tokens[2]) - 1"/>
+        <xsl:attribute name="fillId" select="$fillSignatures=>index-of($tokens[3]) - 1"/>
+        <xsl:attribute name="numFmtId" select="$numericFormatTableMap($tokens[4])"/>
         <!--xsl:attribute name="xfId" select="(0)[1]"/-->
         <xsl:attribute name="applyFont" select="'true'"/>
         <xsl:attribute name="applyBorder" select="'true'"/>
@@ -389,17 +393,23 @@
   </xsl:function>
   
   
-  <xsl:variable name="default-cell-style" select="map:merge((
+  <xd:doc>
+    <xd:desc>
+      <xd:p>Define the default cell style. This is the top of the inheritance cascade</xd:p>
+    </xd:desc>
+  </xd:doc>
+  <xsl:variable name="default-cell-style"
+    select="map:merge((
     map {
     'border-left-style'  : 'none',
     'border-right-style' : 'none',
     'border-top-style'   : 'none',
     'border-bottom-style': 'none'
     },map {
-    'border-left-color'  : soox:parse-color('black','invalid'),
-    'border-right-color' : soox:parse-color('black','invalid'),
-    'border-top-color'   : soox:parse-color('black','invalid'),
-    'border-bottom-color': soox:parse-color('black','invalid')
+    'border-left-color'  : soox:parse-color('black'),
+    'border-right-color' : soox:parse-color('black'),
+    'border-top-color'   : soox:parse-color('black'),
+    'border-bottom-color': soox:parse-color('black')
     },map {
     'font-family' : 'Arial',
     'font-size'   : 12,
@@ -407,7 +417,7 @@
     'font-style'  : 'normal'
     },map {
     'fill-style' : 'none',
-    'fill-color'   : soox:parse-color('black','invalid')
+    'fill-color'   : soox:parse-color('black')
     },map {
     'numeric-format' : 'General'
     }))"/>
