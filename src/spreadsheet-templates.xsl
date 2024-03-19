@@ -5,6 +5,7 @@
   xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
   xmlns:sml="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
   xmlns:soox="simplify-office-open-xml"
+  xmlns:map="http://www.w3.org/2005/xpath-functions/map"
   xmlns:s="soox"
   exclude-result-prefixes="#all" extension-element-prefixes="soox">
   
@@ -114,36 +115,30 @@
     
     <xsl:element name="sheetData" _namespace="{$ns-sml}">
       <!-- Retrieve the specification of row heights -->
-      <xsl:variable name="rowHeights" as="element(s:height)*">
-        <xsl:for-each select="../s:style/s:height">
-          <xsl:copy>
-            <xsl:copy-of select="@row"/>
-            <xsl:attribute name="h" select="soox:parseRowHeight(@h)"/>
-          </xsl:copy>
-        </xsl:for-each>
+      <xsl:variable name="rowheights2" as="map(*)">
+        <xsl:map>
+          <xsl:for-each-group select="../s:style/s:height" group-by="@row">
+            <xsl:map-entry key="xs:integer(current-grouping-key())" select="(soox:parseRowHeight(current-group()[1]/@h),$defautltRowHeight)[1]"/>
+          </xsl:for-each-group>
+        </xsl:map>  
       </xsl:variable>
-      
-      <xsl:variable name="rowlist" select="(../s:style/s:height/@row,s:cell/@row)=>distinct-values()" as="xs:integer*"/>
-      <xsl:variable name="cells" select="s:cell" as="element(s:cell)*"/>
-      
-      <xsl:for-each select="$rowlist">
-        <xsl:sort data-type="number" order="ascending"/>
         
+      <xsl:for-each-group select="s:cell" group-by="xs:integer(@row)">
         <xsl:variable name="rownumber" select="current()"/>
         <!-- determine the height of current row (if defined) -->
-        <xsl:variable name="thisRowHeight" select="$rowHeights[@row=$rownumber]" as="element(s:height)?"/>
         <xsl:element name="row" _namespace="{$ns-sml}">
-          <xsl:attribute name="r" select="$rownumber"/>
+          <xsl:attribute name="r" select="current-grouping-key()"/>
           <!--xsl:attribute name="spans">1:2</xsl:attribute-->
           <xsl:attribute name="customFormat">false</xsl:attribute>
-          <xsl:attribute name="ht" select="if (exists($thisRowHeight)) then $thisRowHeight/@h else $defautltRowHeight"/>
+          <xsl:attribute name="ht" select="($rowheights2(current-grouping-key()),$defautltRowHeight)[1]"/>
           <xsl:attribute name="hidden">false</xsl:attribute>
-          <xsl:attribute name="customHeight" select="if (exists($thisRowHeight)) then 'true' else 'false'"/>
+          <xsl:attribute name="customHeight" select="if ($rowheights2(current-grouping-key())) then 'true' else 'false'"/>
           <xsl:attribute name="outlineLevel">0</xsl:attribute>
           <xsl:attribute name="collapsed">false</xsl:attribute>
-          <xsl:apply-templates select="$cells[@row=$rownumber]" mode="#current"/>
+          <xsl:apply-templates select="current-group()" mode="#current"/>
         </xsl:element>
-      </xsl:for-each>
+      </xsl:for-each-group>
+      
       
       <!--<xsl:for-each-group select="s:cell" group-by="@row" >
         <xsl:sort select="current-grouping-key()" order="ascending" data-type="number"/>
@@ -201,7 +196,7 @@
     <xd:param name="cell-styles-map"></xd:param>
   </xd:doc>
   <xsl:template match="s:cell"  mode="soox:toOfficeOpenXml">
-    <xsl:param name="shared-strings" as="xs:string*" tunnel="yes"/>
+    <xsl:param name="shared-strings" as="map(xs:string,xs:integer)" tunnel="yes"/>
     <xsl:param name="cell-styles-map" as="map(xs:string,xs:integer)" tunnel="yes"/>
     
     <xsl:variable name="option-date-as-number" select="true()"/>
@@ -214,7 +209,7 @@
     <xsl:variable name="is-date" select="$cell-value castable as xs:date"/>
     
     <!-- Check if the value is defined in shared-strings and, if so , get its index -->
-    <xsl:variable name="shared-string-index" select="if ($has-value) then index-of($shared-strings, $cell-value) else 0"/>
+    <xsl:variable name="shared-string-index" select="if ($has-value) then $shared-strings($cell-value) else 0"/>
     
     <xsl:element name="c" _namespace="{$ns-sml}">
       <xsl:attribute name="r" select="soox:encode-cell-address(@col,@row)"/>
@@ -247,8 +242,8 @@
       </xsl:if>
       <xsl:element name="v" _namespace="{$ns-sml}">
         <xsl:choose>
-          <xsl:when test="count($shared-string-index) ge 1">
-            <xsl:value-of select="$shared-string-index[1] - 1"/>
+          <xsl:when test="$shared-string-index ge 1">
+            <xsl:value-of select="$shared-string-index - 1"/>
           </xsl:when>
           <xsl:when test="$is-date and $option-date-as-number">
             <xsl:value-of select="days-from-duration(xs:date($cell-value) - xs:date('1900-01-01')) + 2"/>
@@ -270,7 +265,7 @@
     <xd:param name="shared-strings"></xd:param>
   </xd:doc>
   <xsl:template match="s:v"  mode="soox:toOfficeOpenXml" xml:space="default">
-    <xsl:param name="shared-strings" as="xs:string*" tunnel="yes"/>
+    <xsl:param name="shared-strings" as="map(xs:string,xs:integer)" tunnel="yes"/>
     
     <xsl:variable name="option-date-as-number" select="true()"/>
     
@@ -279,7 +274,7 @@
     <xsl:variable name="is-date" select="text() castable as xs:date"/>
     
     <!-- Check if the value is defined in shared-strings and, if so , get its index -->
-    <xsl:variable name="shared-string-index" select="index-of($shared-strings,text())"/>
+    <xsl:variable name="shared-string-index" select="$shared-strings(text())"/>
     
     <xsl:element name="c" _namespace="{$ns-sml}">
       <xsl:attribute name="r" select="soox:convertColumnNumberToLetters(ancestor::s:cell/@col)||ancestor::s:cell/@row"/>
@@ -303,7 +298,7 @@
       </xsl:attribute>
       
       <xsl:element name="v" _namespace="{$ns-sml}">
-        <xsl:variable name="shared-string-index" select="index-of($shared-strings,text())"/>
+        <xsl:variable name="shared-string-index" select="$shared-strings(text())"/>
         <xsl:choose>
           <xsl:when test="count($shared-string-index) ge 1">
             <xsl:value-of select="$shared-string-index[1] - 1"/>

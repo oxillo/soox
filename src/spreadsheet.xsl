@@ -97,17 +97,25 @@
         </xsl:variable>
         
         <!-- Compute items shared across worksheets : shared strings and styles -->
-        <xsl:variable name="sharedStrings.xml" select="$wbk => soox:sharedStrings.xml()"/>
+        <xsl:variable name="all-cell-values" select="$wbk//s:cell/s:v/text()[not(. castable as xs:date or . castable as xs:double) ]"/>
+        <xsl:variable name="shared-strings" as="xs:string*" select="$all-cell-values=>distinct-values()"/>
+        <xsl:variable name="shared-strings-map" as="map(xs:string,xs:integer)">
+            <xsl:map>
+                <xsl:for-each select="$shared-strings">
+                    <xsl:map-entry key="current()" select="position()"/>
+                </xsl:for-each>
+            </xsl:map>
+        </xsl:variable>
+        <xsl:variable name="sharedStrings.xml" select="soox:sharedStrings.xml($shared-strings,count($all-cell-values))"/>
         <xsl:variable name="styles.xml" select="$wbk => soox:styles.xml()"/>
         <xsl:variable name="cell-styles-map" select="$wbk//s:cell/s:style => soox:buildCellStylesMap()"/>
         
         <xsl:variable name="worksheets" as="map(*)">
             <xsl:variable name="ws" as="map(*)*">
                 <xsl:variable name="wstype" select="'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet'"/>
-                <xsl:variable name="shared-strings" select="$sharedStrings.xml('content')//*:sst/*:si/*:t/text()"/>
                 <xsl:for-each select="$wbk/s:worksheet">
                     <xsl:variable name="wsfilename" select="$base||'worksheets/sheet'||position()||'.xml'"/>
-                    <xsl:sequence select="map:entry($wsfilename,current()=>soox:worksheet.xml($shared-strings, $cell-styles-map))"/>
+                    <xsl:sequence select="map:entry($wsfilename,current()=>soox:worksheet.xml($shared-strings-map, $cell-styles-map))"/>
                 </xsl:for-each>
             </xsl:variable>
             <xsl:sequence select="map:merge($ws)"/>
@@ -219,7 +227,7 @@
     </xd:doc>
     <xsl:function name="soox:worksheet.xml" visibility="private">
         <xsl:param name="simple_worksheet"/>
-        <xsl:param name="shared-strings" as="xs:string*"/>
+        <xsl:param name="shared-strings" as="map(xs:string,xs:integer)"/>
         <xsl:param name="cell-styles-map" as="map(xs:string,xs:integer)"/>
         
         <xsl:variable name="content">
@@ -244,17 +252,14 @@
         <xd:param name="simple_workbook"></xd:param>
     </xd:doc>
     <xsl:function name="soox:sharedStrings.xml" visibility="private">
-        <xsl:param name="simple_workbook"/>
-        
-        <!-- Collect the strings -->
-        <xsl:variable name="all-cell-values" select="$simple_workbook//s:cell/s:v/text()[not(. castable as xs:date or . castable as xs:double) ]"/>
-        <xsl:variable name="distinct-cell-values" select="$all-cell-values => distinct-values()"/>
+        <xsl:param name="shared-strings" as="xs:string*"/>
+        <xsl:param name="all-strings-count" as="xs:integer"/>
         
         <xsl:variable name="content">
             <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-                <xsl:attribute name="count" select="$all-cell-values => count()"/>
-                <xsl:attribute name="uniqueCount" select="$distinct-cell-values => count()"/>
-                <xsl:for-each select="$distinct-cell-values">
+                <xsl:attribute name="count" select="$all-strings-count"/>
+                <xsl:attribute name="uniqueCount" select="$shared-strings => count()"/>
+                <xsl:for-each select="$shared-strings">
                     <si>
                         <t>
                             <xsl:attribute name="xml:space">preserve</xsl:attribute>
