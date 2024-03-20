@@ -66,16 +66,7 @@
       <xsl:copy-of select="@*"/>
       <!-- Write the <style/> element with all attributes; computes signatures -->
       <s:style>
-        <!-- border style -->
-        <xsl:attribute name="border-left-style" select="$cascaded-style('border-left-style')"/>  
-        <xsl:attribute name="border-right-style" select="$cascaded-style('border-right-style')"/>
-        <xsl:attribute name="border-top-style" select="$cascaded-style('border-top-style')"/>
-        <xsl:attribute name="border-bottom-style" select="$cascaded-style('border-bottom-style')"/>
-        <!-- border color -->
-        <xsl:attribute name="border-left-color" select="$cascaded-style('border-left-color')"/>  
-        <xsl:attribute name="border-right-color" select="$cascaded-style('border-right-color')"/>
-        <xsl:attribute name="border-top-color" select="$cascaded-style('border-top-color')"/>
-        <xsl:attribute name="border-bottom-color" select="$cascaded-style('border-bottom-color')"/>
+        <!-- border style & color -->
         <xsl:variable name="border-signature" select="(
           $cascaded-style('border-left-style'),$cascaded-style('border-left-color'),
           $cascaded-style('border-right-style'),$cascaded-style('border-right-color'),
@@ -83,15 +74,9 @@
           $cascaded-style('border-bottom-style'),$cascaded-style('border-bottom-color'))=>string-join('#')"/>
         <xsl:attribute name="border-signature" select="$border-signature"/>
         <!-- font -->
-        <xsl:attribute name="font-family" select="$cascaded-style('font-family')"/>
-        <xsl:attribute name="font-size" select="$cascaded-style('font-size')"/>
-        <xsl:attribute name="font-weight" select="$cascaded-style('font-weight')"/>
-        <xsl:attribute name="font-style" select="$cascaded-style('font-style')"/>
         <xsl:variable name="font-signature" select="($cascaded-style('font-family'),$cascaded-style('font-size'),$cascaded-style('font-weight'),$cascaded-style('font-style'))=>string-join('#')"/>
         <xsl:attribute name="font-signature" select="$font-signature"/> 
         <!-- fill -->
-        <xsl:attribute name="fill-style" select="$cascaded-style('fill-style')"/>
-        <xsl:attribute name="fill-color" select="$cascaded-style('fill-color')"/>
         <xsl:variable name="fill-signature" select="($cascaded-style('fill-style'),$cascaded-style('fill-color'))=>string-join('#')"/>
         <xsl:attribute name="fill-signature" select="$fill-signature"/>
         <!-- numeric format -->
@@ -101,7 +86,7 @@
         <xsl:attribute name="style-signature" select="($border-signature,$font-signature,$fill-signature,$cascaded-style('numeric-format'))=>string-join(';')"/>
         <xsl:apply-templates select="s:style/node()" mode="#current"/>
       </s:style>
-      <xsl:apply-templates mode="#current" select="*[not(self::s:style)]">
+      <xsl:apply-templates mode="#current" select="* except s:style">
         <xsl:with-param name="inherited-style" select="$cascaded-style" tunnel="yes"/>
       </xsl:apply-templates>
     </xsl:copy>
