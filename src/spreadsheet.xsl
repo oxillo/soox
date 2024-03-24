@@ -112,7 +112,6 @@
         
         <xsl:variable name="worksheets" as="map(*)">
             <xsl:variable name="ws" as="map(*)*">
-                <xsl:variable name="wstype" select="'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet'"/>
                 <xsl:for-each select="$wbk/s:worksheet">
                     <xsl:variable name="wsfilename" select="$base||'worksheets/sheet'||position()||'.xml'"/>
                     <xsl:sequence select="map:entry($wsfilename,current()=>soox:worksheet.xml($shared-strings-map, $cell-styles-map))"/>

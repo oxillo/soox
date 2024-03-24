@@ -31,15 +31,19 @@
         <xsl:param name="inherited" as="map(*)"/>
         <xsl:param name="local" as="element(s:style)"/>
         
-        <xsl:variable name="from-local" as="map(*)">
-            <xsl:map>
-                <xsl:if test="$local/@numeric-format">
+        <xsl:if test="$local/@numeric-format">
+            <xsl:variable name="from-local" as="map(*)">
+                <xsl:map>
                     <xsl:map-entry key="'numeric-format'" select="$local/@numeric-format"/>
-                </xsl:if>
-            </xsl:map>
-        </xsl:variable>
+                </xsl:map>
+            </xsl:variable>
+            <xsl:variable name="cascaded-style" select="map:merge(($inherited,$from-local),map{'duplicates':'use-last'})"/>
+            <xsl:sequence select="$cascaded-style=>map:put('numeric-format-signature',$cascaded-style('numeric-format'))"/>
+        </xsl:if>
+        <xsl:if test="not($local/@numeric-format)">
+            <xsl:sequence select="$inherited"/>
+        </xsl:if>
         
-        <xsl:sequence select="map:merge(($inherited,$from-local),map{'duplicates':'use-last'})"/>
     </xsl:function>
     
     

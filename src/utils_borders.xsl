@@ -32,22 +32,39 @@
         <xsl:param name="inherited" as="map(*)"/>
         <xsl:param name="local" as="element(s:style)"/>
         
+        <xsl:variable name="style-has-border-attributes" select="not(empty(
+            ($local/@border,$local/@border-color,$local/@border-style,
+            $local/@border-left-style,$local/@border-right-style,$local/@border-top-style,$local/@border-bottom-style,
+            $local/@border-left-color,$local/@border-right-color,$local/@border-top-color,$local/@border-bottom-color)))"/>
         
-        <xsl:variable name="from-border" as="map(*)*">
-            <xsl:apply-templates select="$local/@border" mode="soox:spreadsheet-styles-cascade"/>  
-        </xsl:variable>
-        <xsl:variable name="from-border-stylecolor" as="map(*)*">
-            <xsl:apply-templates select="($local/@border-color,$local/@border-style)" mode="soox:spreadsheet-styles-cascade"/>
-        </xsl:variable>
-        <xsl:variable name="from-border-detailed" as="map(*)">
-            <xsl:map>
-                <xsl:apply-templates mode="soox:spreadsheet-styles-cascade" select="(
-                    $local/@border-left-style,$local/@border-right-style,$local/@border-top-style,$local/@border-bottom-style,
-                    $local/@border-left-color,$local/@border-right-color,$local/@border-top-color,$local/@border-bottom-color)"/>
-            </xsl:map>
-        </xsl:variable>
-        <xsl:sequence select="map:merge(($inherited,$from-border,$from-border-stylecolor,$from-border-detailed),map{'duplicates':'use-last'})"/>
+        <xsl:if test="$style-has-border-attributes">
+           <xsl:variable name="from-border" as="map(*)*">
+               <xsl:apply-templates select="$local/@border" mode="soox:spreadsheet-styles-cascade"/>  
+           </xsl:variable>
+           <xsl:variable name="from-border-stylecolor" as="map(*)*">
+               <xsl:apply-templates select="($local/@border-color,$local/@border-style)" mode="soox:spreadsheet-styles-cascade"/>
+           </xsl:variable>
+           <xsl:variable name="from-border-detailed" as="map(*)">
+               <xsl:map>
+                   <xsl:apply-templates mode="soox:spreadsheet-styles-cascade" select="(
+                       $local/@border-left-style,$local/@border-right-style,$local/@border-top-style,$local/@border-bottom-style,
+                       $local/@border-left-color,$local/@border-right-color,$local/@border-top-color,$local/@border-bottom-color)"/>
+               </xsl:map>
+           </xsl:variable>
+           <xsl:variable name="cascaded-style" select="map:merge(($inherited,$from-border,$from-border-stylecolor,$from-border-detailed),map{'duplicates':'use-last'})"/>
+           <xsl:variable name="border-signature" select="(
+               $cascaded-style('border-left-style'),$cascaded-style('border-left-color'),
+               $cascaded-style('border-right-style'),$cascaded-style('border-right-color'),
+               $cascaded-style('border-top-style'),$cascaded-style('border-top-color'),
+               $cascaded-style('border-bottom-style'),$cascaded-style('border-bottom-color'))=>string-join('#')"/>
+           <xsl:sequence select="map:put($cascaded-style,'border-signature',$border-signature)"/>
+        </xsl:if>
+        <xsl:if test="not($style-has-border-attributes)">
+           <xsl:sequence select="$inherited"/> 
+        </xsl:if>
     </xsl:function>
+    
+    
     
     
     <xd:doc>
@@ -155,9 +172,10 @@
     <xsl:template match="@border-style" mode="soox:spreadsheet-styles-cascade">
         <xsl:variable name="tokens" select="normalize-space(.)=>tokenize(' ')"/>
         
+        <xsl:variable name="cnt" select="$tokens=>count()"/>
         <xsl:map>
             <xsl:choose>
-                <xsl:when test="count($tokens)=1">
+                <xsl:when test="$cnt=1">
                     <xsl:if test="$tokens[1]=$borders-styles">
                         <xsl:map-entry key="'border-left-style'" select="$tokens[1]"/>
                         <xsl:map-entry key="'border-right-style'" select="$tokens[1]"/>
@@ -165,7 +183,7 @@
                         <xsl:map-entry key="'border-bottom-style'" select="$tokens[1]"/>
                     </xsl:if>
                 </xsl:when>
-                <xsl:when test="count($tokens)=2">
+                <xsl:when test="$cnt=2">
                     <xsl:if test="$tokens[1]=$borders-styles">
                         <xsl:map-entry key="'border-top-style'" select="$tokens[1]"/>
                         <xsl:map-entry key="'border-bottom-style'" select="$tokens[1]"/>
@@ -175,7 +193,7 @@
                         <xsl:map-entry key="'border-right-style'" select="$tokens[2]"/>
                     </xsl:if>
                 </xsl:when>
-                <xsl:when test="count($tokens)=3">
+                <xsl:when test="$cnt=3">
                     <xsl:if test="$tokens[1]=$borders-styles">
                         <xsl:map-entry key="'border-top-style'" select="$tokens[1]"/>
                     </xsl:if>
@@ -185,9 +203,9 @@
                     </xsl:if>
                     <xsl:if test="$tokens[3]=$borders-styles">
                         <xsl:map-entry key="'border-bottom-style'" select="$tokens[3]"/>
-                    </xsl:if>
+                    </xsl:if>0
                 </xsl:when>
-                <xsl:when test="count($tokens)=4">
+                <xsl:when test="$cnt=4">
                     <xsl:if test="$tokens[1]=$borders-styles">
                         <xsl:map-entry key="'border-top-style'" select="$tokens[1]"/>
                     </xsl:if>
@@ -203,7 +221,7 @@
                 </xsl:when>
                 <xsl:otherwise/>
             </xsl:choose>
-        </xsl:map>
+        </xsl:map> 
     </xsl:template>
     
     <xd:doc>
@@ -248,7 +266,7 @@
         <xd:desc>
             <xd:p>Generates a table for all unique border styles</xd:p>
         </xd:desc>
-        <xd:param name="bordersTablemap">a sequence of all the cell styles</xd:param>
+        <xd:param name="signatures">a sequence of all the cell styles</xd:param>
         <xd:return>a border table inside a borders element</xd:return>
     </xd:doc>
     <xsl:function name="soox:borders-table" as="element(sml:borders)">
@@ -295,9 +313,5 @@
         select="('inherit','none','thin','medium','dashed','dotted','thick','double','hair',
         'mediumDashed','dashDot','mediumDashDot','dashDotDot','mediumDashDotDot','slantDashDot')"/>
     
-    <!--xsl:variable name="borders" select="('border-left-style','border-left-color',
-        'border-right-style','border-right-color',
-        'border-top-style','border-top-color',
-        'border-bottom-style','border-bottom-color')"/-->
     
 </xsl:stylesheet>

@@ -36,11 +36,31 @@
         
         <xsl:variable name="from-detailed" as="map(*)">
             <xsl:map>
-                <xsl:apply-templates mode="soox:spreadsheet-styles-cascade" select="(
-                    $local/@font-family,$local/@font-size,$local/@font-style,$local/@font-weight)"/>
+                <xsl:if test="$local/@font-family">
+                    <xsl:map-entry key="'font-family'" select="xs:string($local/@font-family)"/>
+                </xsl:if>
+                <xsl:if test="$local/@font-size">
+                    <xsl:map-entry key="'font-size'" select="xs:string($local/@font-size)"/>
+                </xsl:if>
+                <xsl:if test="$local/@font-style">
+                    <xsl:map-entry key="'font-style'" select="xs:string($local/@font-style)"/>
+                </xsl:if>
+                <xsl:if test="$local/@font-weight">
+                    <xsl:map-entry key="'font-weight'" select="xs:string($local/@font-weight)"/>
+                </xsl:if>
+                <!---xsl:apply-templates mode="soox:spreadsheet-styles-cascade" select="(
+                    $local/@font-family,$local/@font-size,$local/@font-style,$local/@font-weight)"/-->
             </xsl:map>
         </xsl:variable>
-        <xsl:sequence select="map:merge(($inherited,$from-detailed),map{'duplicates':'use-last'})"/>
+        <xsl:if test="map:size($from-detailed) = 0">
+            <xsl:sequence select="$inherited"/>
+        </xsl:if>
+        <xsl:if test="map:size($from-detailed) gt 0">
+            <xsl:variable name="cascaded-style" select="map:merge(($inherited,$from-detailed),map{'duplicates':'use-last'})"/>
+            <xsl:sequence select="$cascaded-style=>map:put('font-signature',
+                ($cascaded-style('font-family'),$cascaded-style('font-size'),$cascaded-style('font-weight'),$cascaded-style('font-style'))=>string-join('#'))"/>
+        </xsl:if>
+        
     </xsl:function>
     
     

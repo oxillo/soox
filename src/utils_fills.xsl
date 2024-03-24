@@ -58,23 +58,30 @@
         <xsl:param name="inherited" as="map(*)"/>
         <xsl:param name="local" as="element(s:style)"/>
         
-        
-        <xsl:variable name="from-fill" as="map(*)*">
-            <xsl:map>
-                <xsl:apply-templates select="$local/@fill" mode="soox:spreadsheet-styles-cascade"/>
-            </xsl:map>
-        </xsl:variable>
-        <xsl:variable name="from-fill-color" as="map(*)*">
-            <xsl:map>
-                <xsl:apply-templates select="$local/@fill-color" mode="soox:spreadsheet-styles-cascade"/>
-            </xsl:map>
-        </xsl:variable>
-        <xsl:variable name="from-fill-style" as="map(*)">
-            <xsl:map>
-                <xsl:apply-templates select="$local/@fill-style" mode="soox:spreadsheet-styles-cascade"/>
-            </xsl:map>
-        </xsl:variable>
-        <xsl:sequence select="map:merge(($inherited,$from-fill,$from-fill-color,$from-fill-style),map{'duplicates':'use-last'})"/>
+        <xsl:variable name="has-attributes" select="not(empty(($local/@fill,$local/@fill-color,$local/@fill-style)))"/>
+        <xsl:if test="$has-attributes">
+            <xsl:variable name="from-fill" as="map(*)*">
+                <xsl:map>
+                    <xsl:apply-templates select="$local/@fill" mode="soox:spreadsheet-styles-cascade"/>
+                </xsl:map>
+            </xsl:variable>
+            <xsl:variable name="from-fill-color" as="map(*)*">
+                <xsl:map>
+                    <xsl:apply-templates select="$local/@fill-color" mode="soox:spreadsheet-styles-cascade"/>
+                </xsl:map>
+            </xsl:variable>
+            <xsl:variable name="from-fill-style" as="map(*)">
+                <xsl:map>
+                    <xsl:apply-templates select="$local/@fill-style" mode="soox:spreadsheet-styles-cascade"/>
+                </xsl:map>
+            </xsl:variable>
+            <xsl:variable name="cascaded-style" select="map:merge(($inherited,$from-fill,$from-fill-color,$from-fill-style),map{'duplicates':'use-last'})"/>
+            <xsl:sequence select="$cascaded-style=>map:put('fill-signature',
+                ($cascaded-style('fill-style'),$cascaded-style('fill-color'))=>string-join('#'))"/>
+        </xsl:if>
+        <xsl:if test="not($has-attributes)">
+            <xsl:sequence select="$inherited"/>
+        </xsl:if>    
     </xsl:function>
     
     

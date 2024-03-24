@@ -47,12 +47,12 @@
       <!-- compute the cell range min row/col-> max row/col -->
       <xsl:if test="descendant::s:cell"> 
         <xsl:element name="dimension" _namespace="{$ns-sml}">
-          <xsl:variable name="all-rows" select="distinct-values(descendant::s:cell/@row)"/>
+          <xsl:variable name="all-rows" select="distinct-values(descendant::s:cell/@row)" as="xs:positiveInteger*"/>
           <xsl:variable name="first-row" select="min($all-rows)"/>
           <xsl:variable name="last-row" select="max($all-rows)"/>
-          <xsl:variable name="all-columns" select="distinct-values(descendant::s:cell/@col)"/>
-          <xsl:variable name="first-column" select="min($all-columns) => xs:integer() => soox:convertColumnNumberToLetters()"/>
-          <xsl:variable name="last-column" select="max($all-columns) => xs:integer() => soox:convertColumnNumberToLetters()"/>
+          <xsl:variable name="all-columns" select="distinct-values(descendant::s:cell/@col)" as="xs:positiveInteger*"/>
+          <xsl:variable name="first-column" select="min($all-columns) => soox:convertColumnNumberToLetters()"/>
+          <xsl:variable name="last-column" select="max($all-columns) => soox:convertColumnNumberToLetters()"/>
           <xsl:attribute name="ref" select="concat($first-column, $first-row, ':', $last-column,$last-row)"/>
         </xsl:element>
       </xsl:if>
@@ -118,13 +118,12 @@
       <xsl:variable name="rowheights2" as="map(*)">
         <xsl:map>
           <xsl:for-each-group select="../s:style/s:height" group-by="@row">
-            <xsl:map-entry key="xs:integer(current-grouping-key())" select="(soox:parseRowHeight(current-group()[1]/@h),$defautltRowHeight)[1]"/>
+            <xsl:map-entry key="xs:integer(current-grouping-key())" select="soox:parseRowHeight(current-group()/@h[1])"/>
           </xsl:for-each-group>
         </xsl:map>  
       </xsl:variable>
         
       <xsl:for-each-group select="s:cell" group-by="xs:integer(@row)">
-        <xsl:variable name="rownumber" select="current()"/>
         <!-- determine the height of current row (if defined) -->
         <xsl:element name="row" _namespace="{$ns-sml}">
           <xsl:attribute name="r" select="current-grouping-key()"/>

@@ -65,32 +65,32 @@
     <xsl:copy>
       <xsl:copy-of select="@*"/>
       <!-- Write the <style/> element with all attributes; computes signatures -->
-      <s:style>
+      <xsl:element name="style" _namespace="soox">
         <!-- border style & color -->
-        <xsl:variable name="border-signature" select="(
+        <!--xsl:variable name="border-signature" select="(
           $cascaded-style('border-left-style'),$cascaded-style('border-left-color'),
           $cascaded-style('border-right-style'),$cascaded-style('border-right-color'),
           $cascaded-style('border-top-style'),$cascaded-style('border-top-color'),
-          $cascaded-style('border-bottom-style'),$cascaded-style('border-bottom-color'))=>string-join('#')"/>
-        <xsl:attribute name="border-signature" select="$border-signature"/>
+          $cascaded-style('border-bottom-style'),$cascaded-style('border-bottom-color'))=>string-join('#')"/-->
+        <xsl:attribute name="border-signature" select="$cascaded-style('border-signature')"/>
         <!-- font -->
-        <xsl:variable name="font-signature" select="($cascaded-style('font-family'),$cascaded-style('font-size'),$cascaded-style('font-weight'),$cascaded-style('font-style'))=>string-join('#')"/>
-        <xsl:attribute name="font-signature" select="$font-signature"/> 
+        <xsl:attribute name="font-signature" select="$cascaded-style('font-signature')"/> 
         <!-- fill -->
-        <xsl:variable name="fill-signature" select="($cascaded-style('fill-style'),$cascaded-style('fill-color'))=>string-join('#')"/>
-        <xsl:attribute name="fill-signature" select="$fill-signature"/>
+        <xsl:attribute name="fill-signature" select="$cascaded-style('fill-signature')"/>
         <!-- numeric format -->
-        <xsl:attribute name="numeric-format" select="$cascaded-style('numeric-format')"/>
-        <xsl:attribute name="numeric-format-signature" select="$cascaded-style('numeric-format')"/>
+        <xsl:attribute name="numeric-format-signature" select="$cascaded-style('numeric-format-signature')"/>
         <!-- style signature -->
-        <xsl:attribute name="style-signature" select="($border-signature,$font-signature,$fill-signature,$cascaded-style('numeric-format'))=>string-join(';')"/>
+        <!--xsl:attribute name="style-signature" select="($cascaded-style('border-signature'),$cascaded-style('font-signature'),$cascaded-style('fill-signature'),$cascaded-style('numeric-format-signature'))=>string-join(';')"/-->
+        <xsl:attribute name="style-signature" select="$cascaded-style('style-signature')"/>
         <xsl:apply-templates select="s:style/node()" mode="#current"/>
-      </s:style>
+      </xsl:element>
       <xsl:apply-templates mode="#current" select="* except s:style">
         <xsl:with-param name="inherited-style" select="$cascaded-style" tunnel="yes"/>
       </xsl:apply-templates>
     </xsl:copy>
   </xsl:template>
+  
+  
   
   
   <xd:doc>
@@ -112,11 +112,17 @@
     <xsl:param name="inherited" as="map(*)"/>
     <xsl:param name="local" as="element(s:style)"/>
       
-    <xsl:sequence select="$inherited=>
+    <xsl:variable name="cascaded-style" select="$inherited=>
       soox:cascade-border-style($local)=>
       soox:cascade-fill-style($local)=>
       soox:cascade-font-style($local)=>
       soox:cascade-numeric-format($local)"/>
+    <!--xsl:variable name="font-signature" select="($cascaded-style('font-family'),$cascaded-style('font-size'),$cascaded-style('font-weight'),$cascaded-style('font-style'))=>string-join('#')"/>
+    <xsl:variable name="fill-signature" select="($cascaded-style('fill-style'),$cascaded-style('fill-color'))=>string-join('#')"/>
+    <xsl:attribute name="numeric-format-signature" select="$cascaded-style('numeric-format')"/>
+    <xsl:attribute name="style-signature" select="($cascaded-style('border-signature'),$font-signature,$fill-signature,$cascaded-style('numeric-format'))=>string-join(';')"/-->
+    <xsl:sequence select="$cascaded-style=>map:put('style-signature',
+      ($cascaded-style('border-signature'),$cascaded-style('font-signature'),$cascaded-style('fill-signature'),$cascaded-style('numeric-format-signature'))=>string-join(';'))"/>
   </xsl:function>
   
   
@@ -315,12 +321,21 @@
   <xsl:function name="soox:buildCellStylesMap" as="map(xs:string,xs:integer)">
     <xsl:param name="styles" as="element(s:style)*"/>
     
+    <xsl:variable name="signatures" as="xs:string*"
+      select="distinct-values($styles/@style-signature)=>sort()"/>
     <xsl:map>
+      <xsl:for-each select="$signatures">
+        <xsl:map-entry key="current()" select="position()"/>
+      </xsl:for-each>
+    </xsl:map>
+      
+    
+    <!--xsl:map>
       <xsl:for-each-group select="$styles" group-by="xs:string(@style-signature)">
         <xsl:sort order="ascending"/>
         <xsl:map-entry key="current-grouping-key()" select="position()"/>
       </xsl:for-each-group>
-    </xsl:map>
+    </xsl:map-->
   </xsl:function>
   
  
@@ -357,6 +372,7 @@
     </xf-->
     <xsl:variable name="fontSignatures" select="map:keys($fontsTablemap)=>sort()"/>
     <xsl:variable name="fillSignatures" select="map:keys($fillsTablemap)=>sort()"/>
+    
     <xsl:for-each select="distinct-values($styles/@style-signature)">
       <xsl:variable name="tokens" select="current()=>tokenize(';')"/>
       <sml:xf>
@@ -393,17 +409,23 @@
     'border-left-color'  : soox:parse-color('black'),
     'border-right-color' : soox:parse-color('black'),
     'border-top-color'   : soox:parse-color('black'),
-    'border-bottom-color': soox:parse-color('black')
+    'border-bottom-color': soox:parse-color('black'),
+    'border-signature':'none#FF000000#none#FF000000#none#FF000000#none#FF000000'
     },map {
     'font-family' : 'Arial',
     'font-size'   : 12,
     'font-weight' : 'normal',
-    'font-style'  : 'normal'
+    'font-style'  : 'normal',
+    'font-signature': 'Arial#12#normal#normal'
     },map {
-    'fill-style' : 'none',
-    'fill-color'   : soox:parse-color('black')
+    'fill-style'     : 'none',
+    'fill-color'     : soox:parse-color('black'),
+    'fill-signature' : 'none#FF000000' 
     },map {
-    'numeric-format' : 'General'
+    'numeric-format' : 'General',
+    'numeric-format-signature' : 'General'
+    },map {
+    'style-signature' : 'none#FF000000#none#FF000000#none#FF000000#none#FF000000;Arial#12#normal#normal;none#FF000000;General'
     }))"/>
   
 </xsl:stylesheet>

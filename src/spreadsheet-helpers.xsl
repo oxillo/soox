@@ -25,27 +25,9 @@
     <xd:return>a string for A1 cell address</xd:return>
   </xd:doc>
   <xsl:function name="soox:convertColumnNumberToLetters" as="xs:string" visibility="private">
-    <xsl:param name="num" as="xs:integer"/>
+    <xsl:param name="num" as="xs:positiveInteger"/>
     
-    <!-- if we just do $num mod 26, we will get 1 for A, 25 for Y and 0 for Z
-      so we do $num-1 mod 26 to have 0 for A and 25 for Z -->
-    <xsl:variable name="letter" select="codepoints-to-string((65 + (($num - 1) mod 26)))"/>
-    <xsl:choose>
-      <!-- The number is between 1 and 26, return the associated letter 'A'..'Z' -->
-      <xsl:when test="$num le 0">
-        <!--xsl:sequence select="error(QName('http://www.w3.org/2005/xqt-errors'),'error description of my template',
-        ('error', 'object', 'of', 'my', 'template'))" /-->
-        <xsl:message terminate="yes">soox:convertColumnNumberToLetters was called with an invalid argument(<xsl:value-of select="$num"/>)</xsl:message>
-      </xsl:when>
-      <!-- The number is between 1 and 26, return the associated letter 'A'..'Z' -->
-      <xsl:when test="$num le 26">
-        <xsl:sequence select="$letter"/>
-      </xsl:when>
-      <!-- For number above 26, recursively call the function for preceding letters --> 
-      <xsl:otherwise>
-        <xsl:sequence select="concat(soox:convertColumnNumberToLetters($num idiv 26),$letter)"/>
-      </xsl:otherwise>
-    </xsl:choose>
+    <xsl:sequence select="$column-names[$num]"/>
   </xsl:function>
   
   <xd:doc>
@@ -57,10 +39,10 @@
     <xd:return>a string in A1 format or the empty string ''</xd:return>
   </xd:doc>
   <xsl:function name="soox:encode-cell-address" visibility="public">
-    <xsl:param name="col" as="xs:integer"/>
+    <xsl:param name="col" as="xs:positiveInteger"/>
     <xsl:param name="row" as="xs:integer"/>
     
-    <xsl:sequence select="soox:convertColumnNumberToLetters($col)||$row"/>
+    <xsl:sequence select="concat($column-names[$col],$row)"/>
   </xsl:function>
   
   <xd:doc>
@@ -95,6 +77,16 @@
       </xsl:matching-substring>
     </xsl:analyze-string>
   </xsl:function>
+  
+  
+  <xsl:variable name="letters" as="xs:string+" static="yes"
+      select="('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z')"/>
+  <xsl:variable name="two_letters" as="xs:string+" static="yes"
+    select="$letters=>for-each(function($k) { $letters!concat($k,.) } )"/>
+  <xsl:variable name="three_letters"  as="xs:string+" static="yes"
+    select="$letters=>for-each(function($k) { $two_letters!concat($k,.) } )"/>
+  <xsl:variable name="column-names" as="xs:string+" static="yes"
+      select="($letters,$two_letters,$three_letters)=>subsequence(1,16384)"/>
   
   
   
